@@ -1,0 +1,15 @@
+language: en
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "src/**"
+      instructions: "Focus on bugs, security vulnerabilities, performance issues, and Next.js best practices"
+    - path: "prisma/**"
+      instructions: "Check for migration safety, index usage, and data integrity"
+  high_level_summary: true
+  poem: false
+  review_status: true
+chat:
+  auto_reply: true
