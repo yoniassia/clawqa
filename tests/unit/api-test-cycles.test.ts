@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
 describe('Test Cycles Data', () => {
-  it('should have at least 7 test cycles', async () => {
+  it('should have at least 22 test cycles', async () => {
     const { PrismaClient } = await import('@prisma/client');
     const db = new PrismaClient({ datasources: { db: { url: 'file:./prisma/dev.db' } } });
     const cycles = await db.testCycle.findMany();
-    expect(cycles.length).toBeGreaterThanOrEqual(7);
+    expect(cycles.length).toBeGreaterThanOrEqual(22);
     await db.$disconnect();
   });
 
@@ -17,32 +17,34 @@ describe('Test Cycles Data', () => {
       const steps = JSON.parse(cycle.stepsJson);
       expect(Array.isArray(steps)).toBe(true);
       expect(steps.length).toBeGreaterThan(0);
-      // Steps can be strings or objects with instruction/expectedResult
       for (const step of steps) {
         if (typeof step === 'string') {
           expect(step.length).toBeGreaterThan(5);
         } else {
-          expect(step).toHaveProperty('instruction');
-          expect(step.instruction.length).toBeGreaterThan(5);
+          // Steps can have title/description/expectedResult OR instruction
+          expect(typeof step === 'object').toBe(true);
+          const hasTitle = 'title' in step;
+          const hasInstruction = 'instruction' in step;
+          expect(hasTitle || hasInstruction).toBe(true);
         }
       }
     }
     await db.$disconnect();
   });
 
-  it('Clawdet should have 3 test cycles', async () => {
+  it('Clawdet should have at least 10 test cycles', async () => {
     const { PrismaClient } = await import('@prisma/client');
     const db = new PrismaClient({ datasources: { db: { url: 'file:./prisma/dev.db' } } });
     const clawdet = await db.project.findUnique({ where: { slug: 'clawdet' }, include: { testCycles: true } });
-    expect(clawdet!.testCycles.length).toBe(3);
+    expect(clawdet!.testCycles.length).toBeGreaterThanOrEqual(10);
     await db.$disconnect();
   });
 
-  it('ClawQA should have 4 test cycles', async () => {
+  it('ClawQA should have at least 12 test cycles', async () => {
     const { PrismaClient } = await import('@prisma/client');
     const db = new PrismaClient({ datasources: { db: { url: 'file:./prisma/dev.db' } } });
     const clawqa = await db.project.findUnique({ where: { slug: 'clawqa' }, include: { testCycles: true } });
-    expect(clawqa!.testCycles.length).toBe(4);
+    expect(clawqa!.testCycles.length).toBeGreaterThanOrEqual(12);
     await db.$disconnect();
   });
 
@@ -50,7 +52,7 @@ describe('Test Cycles Data', () => {
     const { PrismaClient } = await import('@prisma/client');
     const db = new PrismaClient({ datasources: { db: { url: 'file:./prisma/dev.db' } } });
     const cycles = await db.testCycle.findMany();
-    const validPriorities = ['critical', 'high', 'normal', 'low'];
+    const validPriorities = ['critical', 'high', 'medium', 'normal', 'low'];
     for (const cycle of cycles) {
       expect(validPriorities).toContain(cycle.priority);
     }

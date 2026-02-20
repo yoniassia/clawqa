@@ -3,93 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClawQA.AI — Architecture</title>
+<title>ClawQA.AI — Developer Architecture</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
-  :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--green:#00ff88;--blue:#4f8fff;--purple:#8b5cf6;--red:#ff4757;--text:#e8e8f0;--dim:#8888a0;--border:#1e1e30}
-  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
-  nav{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;max-width:1000px;margin:0 auto;backdrop-filter:blur(20px);background:rgba(10,10,15,0.8);position:sticky;top:0;z-index:100}
-  nav a{color:var(--dim);text-decoration:none;font-size:14px;transition:color 0.3s}nav a:hover{color:var(--text)}nav a.active{color:var(--text);font-weight:600}nav a.back{color:var(--green);margin-left:auto}
-  .content{max-width:900px;margin:0 auto;padding:40px 24px}
+  :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--green:#00ff88;--blue:#4f8fff;--purple:#8b5cf6;--red:#ff4757;--yellow:#ffd700;--text:#e8e8f0;--dim:#8888a0;--border:#1e1e30}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+  nav{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px}nav a:hover{color:var(--text)}nav a.active{color:var(--text);font-weight:600}nav a.back{color:var(--green);margin-left:auto}
+  .content{max-width:1000px;margin:0 auto;padding:40px 24px}
   h1{font-size:2.5rem;font-weight:700;margin-bottom:8px}
-  h2{font-size:1.5rem;font-weight:600;margin:48px 0 16px;color:var(--green)}
+  h2{font-size:1.5rem;font-weight:600;margin:48px 0 16px;color:var(--green);border-bottom:1px solid var(--border);padding-bottom:8px}
   h3{font-size:1.1rem;font-weight:600;margin:24px 0 12px}
   p{margin-bottom:16px;color:var(--dim)}
-  ul{margin:0 0 16px 24px;color:var(--dim)}li{margin-bottom:8px}
-  code{font-family:'JetBrains Mono',monospace;background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:0.85em;color:var(--text)}
-  pre{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:16px 0}
-  pre code{background:none;padding:0;font-size:0.85em}
-  a{color:var(--blue)}strong{color:var(--text)}
+  strong{color:var(--text)}
+  a{color:var(--blue)}
   .subtitle{font-size:1.1rem;color:var(--dim);margin-bottom:32px}
-  .badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:0.75rem;font-weight:500}
-  .badge.purple{background:rgba(139,92,246,0.15);color:var(--purple)}
-  table{width:100%;border-collapse:collapse;margin:16px 0}
-  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:0.9rem}
-  th{color:var(--green);font-weight:600}td{color:var(--dim)}
+  code{font-family:'JetBrains Mono',monospace;background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:0.85em;color:var(--green)}
+  pre{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:16px 0;font-size:0.85em}
+  pre code{background:none;padding:0;color:var(--text)}
+  ul,ol{margin:0 0 16px 24px;color:var(--dim)}
+  li{margin-bottom:6px}
 
-  /* Interactive architecture diagram */
-  .arch-diagram{position:relative;margin:32px 0;min-height:400px}
-  .arch-group{margin-bottom:12px}
-  .arch-group-label{font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:8px;font-weight:600}
-  .arch-nodes{display:flex;flex-wrap:wrap;gap:12px}
-  .arch-node{background:rgba(18,18,26,0.7);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);position:relative;min-width:140px}
-  .arch-node:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,136,0.15)}
-  .arch-node.expanded{border-color:var(--green);box-shadow:0 8px 30px rgba(0,255,136,0.15)}
-  .arch-node .node-title{font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:8px}
-  .arch-node .node-title .icon{font-size:1.2rem}
-  .arch-node .node-detail{max-height:0;overflow:hidden;transition:max-height 0.4s ease,margin 0.4s ease,opacity 0.3s;opacity:0;font-size:0.8rem;color:var(--dim);margin-top:0}
-  .arch-node.expanded .node-detail{max-height:200px;opacity:1;margin-top:12px}
-  .arch-node .expand-hint{position:absolute;top:8px;right:12px;font-size:0.7rem;color:var(--dim);transition:transform 0.3s}
-  .arch-node.expanded .expand-hint{transform:rotate(180deg)}
+  /* Info cards */
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+  .info-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+  .info-card .val{font-size:1.8rem;font-weight:700;color:var(--green)}
+  .info-card .label{font-size:0.8rem;color:var(--dim);margin-top:4px}
 
-  /* SVG connections */
-  .arch-connections{margin:16px 0}
-  .arch-connections svg{width:100%;height:60px}
-  .conn-line{stroke-dasharray:6 3;animation:dashFlow 1s linear infinite}
-  @keyframes dashFlow{to{stroke-dashoffset:-9}}
+  /* File tree */
+  .tree{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:0.85em;line-height:1.8}
+  .tree .folder{color:var(--blue);cursor:pointer}
+  .tree .folder:hover{color:var(--green)}
+  .tree .file{color:var(--dim)}
+  .tree .comment{color:#555;font-style:italic}
+  .tree details{margin-left:20px}
+  .tree details>summary{list-style:none;cursor:pointer;color:var(--blue)}
+  .tree details>summary::-webkit-details-marker{display:none}
+  .tree details>summary::before{content:'📁 '}
+  .tree details[open]>summary::before{content:'📂 '}
+  .tree .f::before{content:'📄 ';color:var(--dim)}
+  .tree .f{color:var(--dim);margin-left:20px;display:block}
 
-  /* Horizontal flow */
-  .h-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:24px 0;margin:24px 0}
-  .h-flow-step{background:rgba(18,18,26,0.7);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:16px;min-width:160px;text-align:center;flex-shrink:0;opacity:0.3;transition:all 0.6s;position:relative}
-  .h-flow-step.lit{opacity:1;border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,0.15)}
-  .h-flow-step .step-num{width:28px;height:28px;border-radius:50%;background:var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;margin-bottom:8px;transition:all 0.6s}
-  .h-flow-step.lit .step-num{background:var(--green);color:var(--bg)}
-  .h-flow-step .step-label{font-size:0.8rem;font-weight:600;color:var(--text)}
-  .h-flow-step .step-sub{font-size:0.7rem;color:var(--dim);margin-top:4px}
-  .h-flow-arrow{color:var(--green);font-size:1.2rem;margin:0 4px;flex-shrink:0;opacity:0.3;transition:opacity 0.6s}
-  .h-flow-arrow.lit{opacity:1}
+  /* API table */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:0.85rem}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--green);font-weight:600;position:sticky;top:0;background:var(--bg)}
+  td{color:var(--dim)}
+  td code{font-size:0.8em}
+  .method{font-weight:600;font-family:'JetBrains Mono',monospace;font-size:0.8em}
+  .method.get{color:var(--blue)}.method.post{color:var(--green)}.method.put{color:var(--yellow)}.method.delete{color:var(--red)}
+  .auth-badge{font-size:0.7rem;padding:2px 8px;border-radius:99px;font-weight:500}
+  .auth-badge.key{background:rgba(0,255,136,0.1);color:var(--green)}
+  .auth-badge.none{background:rgba(136,136,160,0.1);color:var(--dim)}
+  .auth-badge.session{background:rgba(79,143,255,0.1);color:var(--blue)}
 
-  /* Circular auto-fix loop */
-  .loop-container{display:flex;justify-content:center;margin:32px 0}
-  .loop-svg{width:360px;height:360px}
-  .loop-node-bg{fill:rgba(18,18,26,0.9);stroke:var(--border);stroke-width:1}
-  .loop-node-bg:hover{stroke:var(--green)}
-  .loop-text{fill:var(--text);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;text-anchor:middle}
-  .loop-subtext{fill:var(--dim);font-family:'Inter',sans-serif;font-size:9px;text-anchor:middle}
-  .loop-arrow{fill:none;stroke:var(--green);stroke-width:2;stroke-dasharray:6 3;animation:dashFlow 1.2s linear infinite}
-  .loop-spinner{animation:spinLoop 8s linear infinite;transform-origin:180px 180px}
-  @keyframes spinLoop{to{transform:rotate(360deg)}}
+  /* ER diagram */
+  .er-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+  .er-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;transition:all 0.3s}
+  .er-card:hover{border-color:var(--green);transform:translateY(-2px)}
+  .er-card h4{color:var(--text);font-size:0.9rem;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .er-card .fields{font-size:0.75rem;color:var(--dim);line-height:1.6}
+  .er-card .rel{font-size:0.7rem;color:var(--blue);margin-top:6px;border-top:1px solid var(--border);padding-top:6px}
 
-  /* ER Diagram */
-  .er-diagram{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0}
-  .er-entity{background:rgba(18,18,26,0.7);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.3s}
-  .er-entity:hover{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,0.1)}
-  .er-entity .entity-name{background:rgba(0,255,136,0.1);padding:10px 14px;font-weight:600;font-size:0.85rem;border-bottom:1px solid var(--border)}
-  .er-entity .entity-fields{padding:8px 14px}
-  .er-entity .field{font-size:0.75rem;color:var(--dim);padding:2px 0;font-family:'JetBrains Mono',monospace}
-  .er-entity .field .pk{color:var(--green);font-weight:600}
-  .er-entity .field .fk{color:var(--blue);font-weight:500}
+  /* Flow diagrams */
+  .flow{display:flex;align-items:center;gap:0;margin:24px 0;overflow-x:auto;padding:16px 0}
+  .flow-step{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;text-align:center;min-width:120px;flex-shrink:0;transition:all 0.3s}
+  .flow-step:hover{border-color:var(--green);transform:scale(1.05)}
+  .flow-step .icon{font-size:1.5rem;margin-bottom:4px}
+  .flow-step .name{font-size:0.8rem;font-weight:600;color:var(--text)}
+  .flow-step .desc{font-size:0.7rem;color:var(--dim);margin-top:2px}
+  .flow-arrow{color:var(--green);font-size:1.2rem;flex-shrink:0;padding:0 4px}
 
-  /* Glass table */
-  .table-glass{background:rgba(18,18,26,0.6);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin:24px 0}
-  .table-glass table{margin:0}
-  .table-glass th{padding:14px;background:rgba(0,255,136,0.05)}
-  .table-glass td{padding:10px 14px}
-  .table-glass tr:hover td{background:rgba(0,255,136,0.03)}
+  /* Matrix */
+  .matrix{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .matrix-col{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .matrix-col h3{font-size:1rem;margin:0 0 12px}
+  .matrix-col.ai h3{color:var(--green)}
+  .matrix-col.human h3{color:var(--blue)}
+  .matrix-col ul{margin:0;padding:0;list-style:none}
+  .matrix-col li{padding:6px 0;border-bottom:1px solid rgba(30,30,48,0.5);font-size:0.85rem;color:var(--dim)}
+  .matrix-col li::before{content:'✓ ';color:var(--green)}
+  .matrix-col.human li::before{content:'👤 ';color:var(--blue)}
 
-  @media(max-width:600px){h1{font-size:2rem}.arch-nodes{flex-direction:column}.h-flow{flex-direction:column}.h-flow-arrow{transform:rotate(90deg)}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;opacity:1!important;transform:none!important}}</style>
+  /* Test coverage */
+  .test-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:16px 0}
+  .test-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .test-card h4{font-size:0.85rem;color:var(--text);margin-bottom:6px}
+  .test-card .count{color:var(--green);font-weight:600}
+  .test-card p{font-size:0.75rem;margin:0;color:var(--dim)}
+
+  @media(max-width:768px){
+    .matrix{grid-template-columns:1fr}
+    .flow{flex-direction:column}
+    .flow-arrow{transform:rotate(90deg)}
+    .info-grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
 </head>
 <body>
 <nav>
@@ -102,325 +114,383 @@
   <a href="/" class="back">← Back to App</a>
 </nav>
 <div class="content">
-  <h1>Technical Architecture</h1>
-  <p class="subtitle">System design, data flows, API surface, and database schema</p>
+  <h1>Developer Architecture</h1>
+  <p class="subtitle">Complete technical reference — v1.0.0</p>
 
-  <h2>System Architecture</h2>
-  <p>ClawQA sits between two user types (Project Managers and AI Agents) and the external Applause testing platform. <em>Click any node to expand details.</em></p>
-
-  <div class="arch-diagram">
-    <div class="arch-group">
-      <div class="arch-group-label">👥 Users</div>
-      <div class="arch-nodes">
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">👤</span> Project Manager</div>
-          <div class="node-detail">Uses the ClawQA dashboard to create projects, assign AI agents, monitor test cycles, review bug reports, and approve releases. Authenticates via GitHub OAuth.</div>
-        </div>
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">🤖</span> OpenClaw Agent</div>
-          <div class="node-detail">Connects via REST API (Bearer token) or MCP. Creates test cycles, receives bug webhooks, submits fixes. Uses API keys prefixed with <code>cqa_</code>.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="arch-connections">
-      <svg viewBox="0 0 800 60" fill="none"><line x1="100" y1="10" x2="400" y2="50" stroke="#00ff88" stroke-width="1.5" class="conn-line"/><line x1="300" y1="10" x2="400" y2="50" stroke="#4f8fff" stroke-width="1.5" class="conn-line"/></svg>
-    </div>
-
-    <div class="arch-group">
-      <div class="arch-group-label">🦞 ClawQA Platform</div>
-      <div class="arch-nodes">
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">🔌</span> REST API</div>
-          <div class="node-detail">Full REST API at <code>/api/v1/*</code> — projects, test cycles, bug reports, fix submissions, webhooks, API keys. JSON request/response format.</div>
-        </div>
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">🔐</span> Auth</div>
-          <div class="node-detail">GitHub OAuth for dashboard users. API key authentication for agents. Session management with secure cookies.</div>
-        </div>
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">💾</span> Database</div>
-          <div class="node-detail">SQLite (dev) / PostgreSQL (prod). Stores users, projects, test cycles, test executions, bug reports, fix attempts, webhooks, and API keys.</div>
-        </div>
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">📡</span> Webhook Dispatcher</div>
-          <div class="node-detail">Event-driven system dispatching bug_report.created, bug_report.verified, bug_report.fix_failed, and cycle.completed events to registered endpoints.</div>
-        </div>
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">🧩</span> MCP Server</div>
-          <div class="node-detail">Model Context Protocol server (coming soon) at <code>https://clawqa.ai/mcp</code>. Exposes ClawQA tools for any MCP-compatible AI agent.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="arch-connections">
-      <svg viewBox="0 0 800 60" fill="none"><line x1="200" y1="10" x2="400" y2="50" stroke="#8b5cf6" stroke-width="1.5" class="conn-line"/><line x1="600" y1="10" x2="400" y2="50" stroke="#4f8fff" stroke-width="1.5" class="conn-line"/></svg>
-    </div>
-
-    <div class="arch-group">
-      <div class="arch-group-label">🌐 External</div>
-      <div class="arch-nodes">
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">🧪</span> Applause API</div>
-          <div class="node-detail">api.applause.com — Creates test cycles, matches testers to devices, receives test results, and sends bug reports back via webhook.</div>
-        </div>
-        <div class="arch-node" onclick="toggleNode(this)">
-          <span class="expand-hint">▼</span>
-          <div class="node-title"><span class="icon">🐙</span> GitHub</div>
-          <div class="node-detail">OAuth provider for user authentication. Future: auto-create test cycles from PRs, link bugs to issues, post fix status as PR comments.</div>
-        </div>
-      </div>
-    </div>
+  <!-- Stats -->
+  <div class="info-grid">
+    <div class="info-card"><div class="val">38</div><div class="label">API Routes</div></div>
+    <div class="info-card"><div class="val">18</div><div class="label">DB Models</div></div>
+    <div class="info-card"><div class="val">16</div><div class="label">Dashboard Pages</div></div>
+    <div class="info-card"><div class="val">8</div><div class="label">Core Libraries</div></div>
+    <div class="info-card"><div class="val">85</div><div class="label">Tests (58+27)</div></div>
+    <div class="info-card"><div class="val">6</div><div class="label">MCP Tools</div></div>
   </div>
 
-  <h2>Data Flow: Test Cycle Creation</h2>
-  <p>When an AI agent creates a new test cycle, this is the full sequence from submission to tester execution:</p>
-
-  <div class="h-flow" id="cycleFlow">
-    <div class="h-flow-step"><div class="step-num">1</div><div class="step-label">Agent POST</div><div class="step-sub">/api/v1/test-cycles</div></div>
-    <div class="h-flow-arrow">→</div>
-    <div class="h-flow-step"><div class="step-num">2</div><div class="step-label">Validate Key</div><div class="step-sub">Auth check</div></div>
-    <div class="h-flow-arrow">→</div>
-    <div class="h-flow-step"><div class="step-num">3</div><div class="step-label">Store in DB</div><div class="step-sub">Create records</div></div>
-    <div class="h-flow-arrow">→</div>
-    <div class="h-flow-step"><div class="step-num">4</div><div class="step-label">Send to Applause</div><div class="step-sub">Create cycle</div></div>
-    <div class="h-flow-arrow">→</div>
-    <div class="h-flow-step"><div class="step-num">5</div><div class="step-label">Testers Execute</div><div class="step-sub">Real devices</div></div>
-    <div class="h-flow-arrow">→</div>
-    <div class="h-flow-step"><div class="step-num">6</div><div class="step-label">Results Webhook</div><div class="step-sub">Bugs dispatched</div></div>
+  <h2>System Overview</h2>
+  <div class="flow">
+    <div class="flow-step"><div class="icon">👤</div><div class="name">Browser</div><div class="desc">GitHub OAuth / Password</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🌐</div><div class="name">Caddy</div><div class="desc">TLS + Reverse Proxy</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">⚡</div><div class="name">Next.js 16</div><div class="desc">PM2 :3150</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">💾</div><div class="name">SQLite</div><div class="desc">Prisma ORM</div></div>
+    <div class="flow-arrow">↔</div>
+    <div class="flow-step"><div class="icon">🧪</div><div class="name">Applause</div><div class="desc">Crowd Testing</div></div>
   </div>
-
-  <h2>Data Flow: Auto-Fix Loop</h2>
-  <p>When a bug is received, the AI agent enters the auto-fix loop — analyzing, fixing, and re-submitting until the fix is verified:</p>
-
-  <div class="loop-container">
-    <svg class="loop-svg" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Spinning indicator -->
-      <g class="loop-spinner">
-        <circle cx="180" cy="30" r="5" fill="#00ff88" opacity="0.6"/>
-      </g>
-      <!-- Circle path -->
-      <circle cx="180" cy="180" r="130" stroke="var(--border)" stroke-width="1" fill="none"/>
-      <circle cx="180" cy="180" r="130" stroke="url(#loopGrad)" stroke-width="2" fill="none" class="loop-arrow" stroke-dasharray="20 10"/>
-      <defs><linearGradient id="loopGrad" x1="0" y1="0" x2="360" y2="360"><stop offset="0%" stop-color="#00ff88"/><stop offset="50%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
-
-      <!-- Nodes on the circle -->
-      <!-- Top: Receive Bug -->
-      <rect x="120" y="20" width="120" height="44" rx="10" class="loop-node-bg"/>
-      <text x="180" y="40" class="loop-text">🐛 Receive Bug</text>
-      <text x="180" y="54" class="loop-subtext">Webhook event</text>
-
-      <!-- Right: Analyze & Fix -->
-      <rect x="270" y="120" width="80" height="44" rx="10" class="loop-node-bg"/>
-      <text x="310" y="140" class="loop-text">🔍 Analyze</text>
-      <text x="310" y="154" class="loop-subtext">Root cause</text>
-
-      <!-- Bottom-right: Deploy -->
-      <rect x="260" y="240" width="90" height="44" rx="10" class="loop-node-bg"/>
-      <text x="305" y="260" class="loop-text">🚀 Deploy</text>
-      <text x="305" y="274" class="loop-subtext">To staging</text>
-
-      <!-- Bottom: Submit Fix -->
-      <rect x="115" y="290" width="130" height="44" rx="10" class="loop-node-bg"/>
-      <text x="180" y="310" class="loop-text">📤 Submit Fix</text>
-      <text x="180" y="324" class="loop-subtext">POST /bugs/:id/fix</text>
-
-      <!-- Left: Re-test -->
-      <rect x="10" y="240" width="90" height="44" rx="10" class="loop-node-bg"/>
-      <text x="55" y="260" class="loop-text">🧪 Re-test</text>
-      <text x="55" y="274" class="loop-subtext">Applause</text>
-
-      <!-- Top-left: Verified? -->
-      <rect x="10" y="120" width="90" height="44" rx="10" class="loop-node-bg"/>
-      <text x="55" y="140" class="loop-text">✅ Verified?</text>
-      <text x="55" y="154" class="loop-subtext">Pass / Fail</text>
-    </svg>
-  </div>
-
-  <h2>MCP (Model Context Protocol) Integration</h2>
-  <p><span class="badge purple">Coming Soon</span></p>
-  <p>ClawQA exposes an MCP server so AI agents can interact with the platform using the <a href="https://spec.modelcontextprotocol.io" target="_blank">Model Context Protocol</a> — a standard for connecting AI models to external tools and data sources.</p>
-  <p>AI agents connecting via MCP can:</p>
   <ul>
-    <li>List projects and test cycles</li>
-    <li>Create test cycles with AI-generated test steps</li>
-    <li>Read bug reports with full reproduction details</li>
-    <li>Submit fixes with commit and deploy URLs</li>
-    <li>Escalate cycles to Applause for crowd testing</li>
-    <li>Check cycle status and progress</li>
+    <li><strong>Server:</strong> Hetzner 135.181.43.68 · Ubuntu · PM2 process manager</li>
+    <li><strong>Framework:</strong> Next.js 16.1.6 (App Router) · React 19 · TypeScript</li>
+    <li><strong>Auth:</strong> NextAuth v5 — GitHub OAuth + Credentials (demo password)</li>
+    <li><strong>Database:</strong> SQLite via Prisma 6.19.2 — 18 models</li>
+    <li><strong>Repo:</strong> <a href="https://github.com/yoniassia/clawqa">github.com/yoniassia/clawqa</a> · Tag: v1.0.0</li>
   </ul>
 
-  <h3>MCP Tools</h3>
-  <pre><code>clawqa.list_projects()                              → [{id, name, slug, url}]
-clawqa.list_cycles(projectId?)                      → [{id, title, status, bugs}]
-clawqa.create_cycle(projectId, title, url, steps[]) → {id, status}
-clawqa.get_bugs(cycleId)                            → [{id, title, severity, steps}]
-clawqa.submit_fix(bugId, commitUrl, deployUrl)      → {status}
-clawqa.escalate(cycleId, reason?)                   → {applauseCycleId}</code></pre>
-  <p><strong>MCP endpoint:</strong> <code>https://clawqa.ai/mcp</code> (coming soon)<br>
-  <strong>REST API equivalent:</strong> <code>https://clawqa.ai/api/v1/*</code> (available now)</p>
-
-  <h2>API Endpoint Map</h2>
-  <p>Complete list of REST API endpoints. All endpoints are prefixed with <code>/api/v1</code>.</p>
-
-  <div class="table-glass">
-    <table>
-      <thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td><code>GET</code></td><td>/api/v1/projects</td><td>None</td><td>List all projects</td></tr>
-        <tr><td><code>GET</code></td><td>/api/v1/projects/:slug</td><td>None</td><td>Get project details by slug</td></tr>
-        <tr><td><code>GET</code></td><td>/api/v1/test-cycles</td><td>None</td><td>List all test cycles</td></tr>
-        <tr><td><code>POST</code></td><td>/api/v1/test-cycles</td><td>API Key</td><td>Create a new test cycle</td></tr>
-        <tr><td><code>GET</code></td><td>/api/v1/test-cycles/:id</td><td>None</td><td>Get cycle details</td></tr>
-        <tr><td><code>GET</code></td><td>/api/v1/test-cycles/:id/bugs</td><td>None</td><td>List bugs for a cycle</td></tr>
-        <tr><td><code>POST</code></td><td>/api/v1/bugs</td><td>API Key</td><td>Create a bug report</td></tr>
-        <tr><td><code>POST</code></td><td>/api/v1/bugs/:id/fix</td><td>API Key</td><td>Submit a fix for a bug</td></tr>
-        <tr><td><code>POST</code></td><td>/api/v1/escalate</td><td>API Key</td><td>Escalate cycle to Applause</td></tr>
-        <tr><td><code>POST</code></td><td>/api/v1/webhooks</td><td>API Key</td><td>Register a webhook endpoint</td></tr>
-        <tr><td><code>GET</code></td><td>/api/v1/webhooks</td><td>API Key</td><td>List registered webhooks</td></tr>
-        <tr><td><code>POST</code></td><td>/api/v1/applause/webhook</td><td>Applause</td><td>Receive results from Applause</td></tr>
-      </tbody>
-    </table>
+  <h2>File Architecture</h2>
+  <div class="tree">
+    <details open>
+      <summary>src/</summary>
+      <details open>
+        <summary>app/</summary>
+        <details>
+          <summary>(auth)/</summary>
+          <span class="f">login/page.tsx <span class="comment">— GitHub OAuth + password login</span></span>
+        </details>
+        <details open>
+          <summary>(dashboard)/ <span class="comment">— Protected route group</span></summary>
+          <span class="f">layout.tsx <span class="comment">— Sidebar navigation layout</span></span>
+          <details>
+            <summary>dashboard/</summary>
+            <span class="f">page.tsx <span class="comment">— Main dashboard with project cards</span></span>
+            <span class="f">test-cycles/page.tsx <span class="comment">— List all test cycles</span></span>
+            <span class="f">test-cycles/[id]/page.tsx <span class="comment">— Cycle detail + steps + bugs</span></span>
+            <span class="f">bugs/page.tsx <span class="comment">— All bug reports</span></span>
+            <span class="f">analytics/page.tsx <span class="comment">— Charts, severity, trends</span></span>
+            <span class="f">test-plans/page.tsx <span class="comment">— Reusable test plan templates</span></span>
+            <span class="f">test-plans/[id]/page.tsx <span class="comment">— Plan detail + execute</span></span>
+            <span class="f">webhooks/page.tsx <span class="comment">— Webhook management + delivery logs</span></span>
+            <span class="f">browse-tests/page.tsx <span class="comment">— Testers browse available tests</span></span>
+            <span class="f">my-tests/page.tsx <span class="comment">— Tester's claimed tests</span></span>
+            <span class="f">my-tests/[id]/page.tsx <span class="comment">— Test execution UI</span></span>
+            <span class="f">my-bugs/page.tsx <span class="comment">— Bugs I reported</span></span>
+          </details>
+          <span class="f">api-keys/page.tsx <span class="comment">— Generate/revoke API keys</span></span>
+          <span class="f">projects/[slug]/page.tsx <span class="comment">— Project detail</span></span>
+          <span class="f">settings/page.tsx <span class="comment">— Applause config + connection test</span></span>
+        </details>
+        <details open>
+          <summary>api/ <span class="comment">— 38 API routes</span></summary>
+          <span class="f">auth/[...nextauth]/route.ts <span class="comment">— NextAuth handlers</span></span>
+          <span class="f">mcp/route.ts <span class="comment">— MCP JSON-RPC server</span></span>
+          <span class="f">api-keys/route.ts <span class="comment">— Key management</span></span>
+          <span class="f">me/route.ts <span class="comment">— Current user info</span></span>
+          <details>
+            <summary>v1/ <span class="comment">— Public REST API</span></summary>
+            <span class="f">projects/route.ts <span class="comment">— GET/POST projects</span></span>
+            <span class="f">projects/[slug]/route.ts <span class="comment">— Project detail</span></span>
+            <span class="f">projects/[slug]/agents/route.ts <span class="comment">— Assign/list agents</span></span>
+            <span class="f">projects/[slug]/agents/[userId]/route.ts <span class="comment">— Remove agent</span></span>
+            <span class="f">test-cycles/route.ts <span class="comment">— GET/POST cycles</span></span>
+            <span class="f">test-cycles/[id]/route.ts <span class="comment">— Cycle detail</span></span>
+            <span class="f">test-cycles/[id]/bugs/route.ts <span class="comment">— Bugs per cycle</span></span>
+            <span class="f">test-plans/route.ts <span class="comment">— GET/POST plans</span></span>
+            <span class="f">test-plans/[id]/route.ts <span class="comment">— Plan detail</span></span>
+            <span class="f">test-plans/[id]/execute/route.ts <span class="comment">— Instantiate plan → cycle</span></span>
+            <span class="f">bugs/route.ts <span class="comment">— GET/POST bugs</span></span>
+            <span class="f">bugs/[id]/fix/route.ts <span class="comment">— Submit fix attempt</span></span>
+            <span class="f">auto-fix/trigger/route.ts <span class="comment">— Start auto-fix job</span></span>
+            <span class="f">auto-fix/[attemptId]/status/route.ts <span class="comment">— Job progress</span></span>
+            <span class="f">auto-fix/[attemptId]/complete/route.ts <span class="comment">— Mark fix done</span></span>
+            <span class="f">analytics/route.ts <span class="comment">— Bug stats & trends</span></span>
+            <span class="f">webhooks/route.ts <span class="comment">— Register/list webhooks</span></span>
+            <span class="f">webhooks/test/route.ts <span class="comment">— Send test ping</span></span>
+            <span class="f">webhooks/[id]/deliveries/route.ts <span class="comment">— Delivery history</span></span>
+            <span class="f">escalate/route.ts <span class="comment">— Send to Applause</span></span>
+            <span class="f">escalation-rules/route.ts <span class="comment">— Priority routing rules</span></span>
+            <span class="f">github/connect/route.ts <span class="comment">— Link repo to project</span></span>
+            <span class="f">github/webhook/route.ts <span class="comment">— Receive PR events</span></span>
+            <span class="f">github/prs/[prNumber]/status/route.ts <span class="comment">— Test status for PR</span></span>
+            <span class="f">applause/status/route.ts <span class="comment">— Connection check</span></span>
+            <span class="f">applause/results/route.ts <span class="comment">— Sync test results</span></span>
+            <span class="f">applause/webhook/route.ts <span class="comment">— Receive Applause events</span></span>
+          </details>
+        </details>
+        <span class="f">developers/page.tsx <span class="comment">— Public API docs portal</span></span>
+        <span class="f">layout.tsx <span class="comment">— Root layout</span></span>
+        <span class="f">page.tsx <span class="comment">— Homepage</span></span>
+      </details>
+      <details>
+        <summary>lib/ <span class="comment">— 8 core modules</span></summary>
+        <span class="f">auth.ts <span class="comment">— NextAuth config (GitHub + Credentials)</span></span>
+        <span class="f">prisma.ts <span class="comment">— Prisma client singleton</span></span>
+        <span class="f">api-auth.ts <span class="comment">— API key validation (SHA-256 hash)</span></span>
+        <span class="f">applause.ts <span class="comment">— Applause SDK (startTestRun, submitResult...)</span></span>
+        <span class="f">webhook-dispatcher.ts <span class="comment">— HMAC-SHA256 signed delivery + retries</span></span>
+        <span class="f">rate-limit.ts <span class="comment">— Sliding window (100 req/min per key)</span></span>
+        <span class="f">priority-scoring.ts <span class="comment">— Bug priority calculation</span></span>
+        <span class="f">escalation-engine.ts <span class="comment">— Rule-based escalation matching</span></span>
+      </details>
+      <details>
+        <summary>components/</summary>
+        <span class="f">GlassCard.tsx <span class="comment">— Glassmorphism card component</span></span>
+        <span class="f">Sidebar.tsx <span class="comment">— Dashboard sidebar nav</span></span>
+        <span class="f">TopBar.tsx <span class="comment">— Top navigation bar</span></span>
+      </details>
+    </details>
+    <details>
+      <summary>tests/ <span class="comment">— 85 tests total</span></summary>
+      <details>
+        <summary>unit/ <span class="comment">— 58 tests (Vitest)</span></summary>
+        <span class="f">api-auth.test.ts <span class="comment">— 4 tests: key validation, hashing</span></span>
+        <span class="f">api-bugs.test.ts <span class="comment">— 2 tests: bug CRUD</span></span>
+        <span class="f">api-projects.test.ts <span class="comment">— 3 tests: project data</span></span>
+        <span class="f">api-test-cycles.test.ts <span class="comment">— 5 tests: cycle data, steps JSON</span></span>
+        <span class="f">applause-client.test.ts <span class="comment">— 10 tests: SDK methods, config</span></span>
+        <span class="f">escalation-rules.test.ts <span class="comment">— 2 tests: rule matching</span></span>
+        <span class="f">mcp-tools.test.ts <span class="comment">— 3 tests: tool definitions</span></span>
+        <span class="f">phases456.test.ts <span class="comment">— 9 tests: auto-fix, webhooks, applause</span></span>
+        <span class="f">phases-7-10.test.ts <span class="comment">— 8 tests: plans, analytics, agents, github</span></span>
+        <span class="f">priority-scoring.test.ts <span class="comment">— 6 tests: score calculation</span></span>
+        <span class="f">rate-limit.test.ts <span class="comment">— 3 tests: sliding window</span></span>
+        <span class="f">schema.test.ts <span class="comment">— 1 test: Prisma schema validity</span></span>
+        <span class="f">webhook-dispatcher.test.ts <span class="comment">— 2 tests: HMAC signing</span></span>
+      </details>
+      <details>
+        <summary>e2e/ <span class="comment">— 27 tests (Playwright)</span></summary>
+        <span class="f">homepage.spec.ts <span class="comment">— 5 tests: title, nav, projects, docs, CTA</span></span>
+        <span class="f">docs.spec.ts <span class="comment">— 7 tests: all doc pages load + links</span></span>
+        <span class="f">api.spec.ts <span class="comment">— 8 tests: API endpoints return correct data</span></span>
+        <span class="f">auth.spec.ts <span class="comment">— 4 tests: login redirect, protection</span></span>
+        <span class="f">webhooks.spec.ts <span class="comment">— 3 tests: webhook registration</span></span>
+      </details>
+    </details>
+    <details>
+      <summary>prisma/</summary>
+      <span class="f">schema.prisma <span class="comment">— 18 models, 264 lines</span></span>
+      <span class="f">dev.db <span class="comment">— SQLite database</span></span>
+    </details>
+    <details>
+      <summary>public/docs/ <span class="comment">— Static documentation</span></summary>
+      <span class="f">index.html, overview.html, architecture.html, phases.html, for-agents.html, for-project-managers.html</span>
+    </details>
   </div>
 
-  <h2>Database Schema</h2>
-  <p>Core entities and their relationships. <em>Hover to highlight.</em></p>
+  <h2>Database Schema (18 Models)</h2>
+  <p>Hover over any model to see its relationships.</p>
+  <div class="er-grid">
+    <div class="er-card" data-rels="Account,Session,ApiKey,TesterProfile,Project,TestExecution,BugReport,Webhook"><h4>👤 User</h4><div class="fields">id, name, email, role, image, createdAt</div><div class="rel">→ Account, Session, ApiKey, Project, Webhook, TestExecution, BugReport, TesterProfile</div></div>
+    <div class="er-card"><h4>🔑 Account</h4><div class="fields">provider, providerAccountId, access_token, refresh_token</div><div class="rel">→ User</div></div>
+    <div class="er-card"><h4>🎫 Session</h4><div class="fields">sessionToken, expires</div><div class="rel">→ User</div></div>
+    <div class="er-card"><h4>🔐 ApiKey</h4><div class="fields">keyHash (SHA-256), keyPrefix, name, lastUsedAt, revokedAt</div><div class="rel">→ User</div></div>
+    <div class="er-card"><h4>🧑‍💻 TesterProfile</h4><div class="fields">devices[], languages[], country, bio</div><div class="rel">→ User (1:1)</div></div>
+    <div class="er-card" data-rels="TestCycle,AgentAssignment,EscalationRule"><h4>📁 Project</h4><div class="fields">name, slug, description, targetUrl, repoUrl, githubOwner, githubRepo, autoFixEnabled</div><div class="rel">→ User (owner), TestCycle[], AgentAssignment[], EscalationRule[]</div></div>
+    <div class="er-card" data-rels="BugReport,TestExecution"><h4>🔄 TestCycle</h4><div class="fields">title, description, targetUrl, priority, status, stepsJson, deviceReqs, prUrl, prNumber</div><div class="rel">→ Project, BugReport[], TestExecution[]</div></div>
+    <div class="er-card"><h4>▶️ TestExecution</h4><div class="fields">status, startedAt, completedAt, resultsJson</div><div class="rel">→ TestCycle, User (tester)</div></div>
+    <div class="er-card" data-rels="FixAttempt"><h4>🐛 BugReport</h4><div class="fields">title, severity, status, stepsToReproduce, expectedResult, actualResult, deviceInfo, screenshotUrls</div><div class="rel">→ TestCycle, User (reporter), FixAttempt[]</div></div>
+    <div class="er-card"><h4>🔧 FixAttempt</h4><div class="fields">commitUrl, deployUrl, notes, status</div><div class="rel">→ BugReport</div></div>
+    <div class="er-card" data-rels="WebhookDelivery"><h4>🔔 Webhook</h4><div class="fields">url, events[], secret (HMAC), active</div><div class="rel">→ User, WebhookDelivery[]</div></div>
+    <div class="er-card"><h4>📬 WebhookDelivery</h4><div class="fields">event, payload, statusCode, responseBody, duration, deliveredAt</div><div class="rel">→ Webhook</div></div>
+    <div class="er-card"><h4>🤖 AutoFixJob</h4><div class="fields">status (queued→analyzing→fixing→deploying→retesting→verified/failed), webhookPayload, retryCount</div><div class="rel">→ BugReport, FixAttempt</div></div>
+    <div class="er-card"><h4>📋 TestPlan</h4><div class="fields">title, description, stepsJson, deviceReqs, browserReqs, priority, version</div><div class="rel">→ Project, User, TestPlanHistory[]</div></div>
+    <div class="er-card"><h4>📜 TestPlanHistory</h4><div class="fields">version, stepsJson, changedAt</div><div class="rel">→ TestPlan</div></div>
+    <div class="er-card"><h4>🤝 AgentAssignment</h4><div class="fields">role (owner/contributor/viewer), permissions</div><div class="rel">→ Project, User</div></div>
+    <div class="er-card"><h4>🚨 EscalationRule</h4><div class="fields">condition (JSON), action (notify/escalate/block-release), targetUrl</div><div class="rel">→ Project</div></div>
+    <div class="er-card"><h4>✅ VerificationToken</h4><div class="fields">identifier, token, expires</div><div class="rel">(standalone)</div></div>
+  </div>
 
-  <div class="er-diagram">
-    <div class="er-entity" data-relations="Project,ApiKey,Webhook,TestCycle">
-      <div class="entity-name">👤 User</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field">githubId: string</div>
-        <div class="field">username: string</div>
-        <div class="field">email: string</div>
-        <div class="field">role: string</div>
-        <div class="field">createdAt: datetime</div>
-      </div>
+  <h2>API Endpoint Map (38 Routes)</h2>
+
+  <h3>Projects & Agents</h3>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/projects</code></td><td><span class="auth-badge none">None</span></td><td>List all projects</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/projects</code></td><td><span class="auth-badge key">API Key</span></td><td>Create project</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/projects/:slug</code></td><td><span class="auth-badge none">None</span></td><td>Project detail</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/projects/:slug/agents</code></td><td><span class="auth-badge key">API Key</span></td><td>List assigned agents</td></tr>
+    <tr><td><span class="method put">PUT</span></td><td><code>/api/v1/projects/:slug/agents</code></td><td><span class="auth-badge key">API Key</span></td><td>Assign agent to project</td></tr>
+    <tr><td><span class="method delete">DEL</span></td><td><code>/api/v1/projects/:slug/agents/:userId</code></td><td><span class="auth-badge key">API Key</span></td><td>Remove agent</td></tr>
+  </table>
+
+  <h3>Test Cycles & Plans</h3>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/test-cycles</code></td><td><span class="auth-badge none">None</span></td><td>List all cycles</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/test-cycles</code></td><td><span class="auth-badge key">API Key</span></td><td>Create test cycle</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/test-cycles/:id</code></td><td><span class="auth-badge none">None</span></td><td>Cycle detail</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/test-cycles/:id/bugs</code></td><td><span class="auth-badge none">None</span></td><td>Bugs for cycle</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/test-plans</code></td><td><span class="auth-badge none">None</span></td><td>List test plans</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/test-plans</code></td><td><span class="auth-badge key">API Key</span></td><td>Create test plan</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/test-plans/:id</code></td><td><span class="auth-badge none">None</span></td><td>Plan detail</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/test-plans/:id/execute</code></td><td><span class="auth-badge key">API Key</span></td><td>Create cycle from plan</td></tr>
+  </table>
+
+  <h3>Bugs & Auto-Fix</h3>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/bugs</code></td><td><span class="auth-badge none">None</span></td><td>List bug reports</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/bugs</code></td><td><span class="auth-badge key">API Key</span></td><td>Create bug report</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/bugs/:id/fix</code></td><td><span class="auth-badge key">API Key</span></td><td>Submit fix attempt</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/auto-fix/trigger</code></td><td><span class="auth-badge key">API Key</span></td><td>Start auto-fix job</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/auto-fix/:id/status</code></td><td><span class="auth-badge key">API Key</span></td><td>Job progress</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/auto-fix/:id/complete</code></td><td><span class="auth-badge key">API Key</span></td><td>Mark fix deployed</td></tr>
+  </table>
+
+  <h3>Webhooks & Analytics</h3>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/webhooks</code></td><td><span class="auth-badge key">API Key</span></td><td>List webhooks</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/webhooks</code></td><td><span class="auth-badge key">API Key</span></td><td>Register webhook</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/webhooks/test</code></td><td><span class="auth-badge key">API Key</span></td><td>Send test ping</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/webhooks/:id/deliveries</code></td><td><span class="auth-badge key">API Key</span></td><td>Delivery history</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/analytics</code></td><td><span class="auth-badge none">None</span></td><td>Bug stats & trends</td></tr>
+  </table>
+
+  <h3>Escalation, GitHub & Applause</h3>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/escalate</code></td><td><span class="auth-badge key">API Key</span></td><td>Escalate cycle to Applause</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/escalation-rules</code></td><td><span class="auth-badge key">API Key</span></td><td>List escalation rules</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/escalation-rules</code></td><td><span class="auth-badge key">API Key</span></td><td>Create rule</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/github/connect</code></td><td><span class="auth-badge key">API Key</span></td><td>Link repo to project</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/github/webhook</code></td><td><span class="auth-badge none">GitHub</span></td><td>Receive PR events</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/github/prs/:num/status</code></td><td><span class="auth-badge none">None</span></td><td>Test status for PR</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/applause/status</code></td><td><span class="auth-badge none">None</span></td><td>Connection check</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/applause/results</code></td><td><span class="auth-badge key">API Key</span></td><td>Sync test results</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/applause/webhook</code></td><td><span class="auth-badge none">Applause</span></td><td>Receive results</td></tr>
+  </table>
+
+  <h3>MCP & Internal</h3>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/mcp</code></td><td><span class="auth-badge key">API Key</span></td><td>MCP JSON-RPC — 6 tools: list_projects, list_cycles, create_cycle, get_bugs, submit_fix, escalate</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/api-keys</code></td><td><span class="auth-badge session">Session</span></td><td>Manage API keys</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/me</code></td><td><span class="auth-badge session">Session</span></td><td>Current user info</td></tr>
+  </table>
+
+  <h2>Data Flows</h2>
+
+  <h3>1. Test Cycle Lifecycle</h3>
+  <div class="flow">
+    <div class="flow-step"><div class="icon">🤖</div><div class="name">AI Agent</div><div class="desc">POST /test-cycles</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">📋</div><div class="name">Created</div><div class="desc">Steps stored in DB</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🚀</div><div class="name">Escalate</div><div class="desc">POST /escalate</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🧪</div><div class="name">Applause</div><div class="desc">Humans test</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🐛</div><div class="name">Bugs</div><div class="desc">Webhook callback</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🔧</div><div class="name">Auto-Fix</div><div class="desc">AI writes fix</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">✅</div><div class="name">Verified</div><div class="desc">Re-tested & passed</div></div>
+  </div>
+
+  <h3>2. Auto-Fix Loop</h3>
+  <div class="flow">
+    <div class="flow-step"><div class="icon">📩</div><div class="name">Bug Webhook</div><div class="desc">bug_report.created</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🔍</div><div class="name">Analyze</div><div class="desc">Read bug details</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">✏️</div><div class="name">Fix Code</div><div class="desc">Write & commit</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🚢</div><div class="name">Deploy</div><div class="desc">Push to staging</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">📤</div><div class="name">Submit Fix</div><div class="desc">POST /bugs/:id/fix</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🧪</div><div class="name">Re-test</div><div class="desc">Applause verifies</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">✅❌</div><div class="name">Result</div><div class="desc">Verified or retry</div></div>
+  </div>
+
+  <h3>3. MCP Tool Call</h3>
+  <div class="flow">
+    <div class="flow-step"><div class="icon">🤖</div><div class="name">AI Agent</div><div class="desc">MCP client</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">🔌</div><div class="name">Initialize</div><div class="desc">Get capabilities</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">📜</div><div class="name">tools/list</div><div class="desc">Discover 6 tools</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">⚡</div><div class="name">tools/call</div><div class="desc">Execute tool</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="icon">📦</div><div class="name">Result</div><div class="desc">Structured JSON</div></div>
+  </div>
+
+  <h2>Test Coverage</h2>
+  <div class="info-grid">
+    <div class="info-card"><div class="val">58</div><div class="label">Unit Tests (Vitest)</div></div>
+    <div class="info-card"><div class="val">27</div><div class="label">E2E Tests (Playwright)</div></div>
+    <div class="info-card"><div class="val">13</div><div class="label">Unit Test Files</div></div>
+    <div class="info-card"><div class="val">5</div><div class="label">E2E Spec Files</div></div>
+  </div>
+  <div class="test-grid">
+    <div class="test-card"><h4>api-auth.test.ts</h4><p><span class="count">4 tests</span> — API key validation, SHA-256 hashing, revoked key rejection</p></div>
+    <div class="test-card"><h4>api-bugs.test.ts</h4><p><span class="count">2 tests</span> — Bug report CRUD operations</p></div>
+    <div class="test-card"><h4>api-projects.test.ts</h4><p><span class="count">3 tests</span> — Project listing, slug lookup, data integrity</p></div>
+    <div class="test-card"><h4>api-test-cycles.test.ts</h4><p><span class="count">5 tests</span> — Cycle count, steps JSON parsing, priority validation</p></div>
+    <div class="test-card"><h4>applause-client.test.ts</h4><p><span class="count">10 tests</span> — SDK methods, configured/unconfigured states, status values</p></div>
+    <div class="test-card"><h4>escalation-rules.test.ts</h4><p><span class="count">2 tests</span> — Rule condition matching, action execution</p></div>
+    <div class="test-card"><h4>mcp-tools.test.ts</h4><p><span class="count">3 tests</span> — Tool definitions, schemas, protocol compliance</p></div>
+    <div class="test-card"><h4>phases456.test.ts</h4><p><span class="count">9 tests</span> — Auto-fix jobs, webhook delivery, Applause integration</p></div>
+    <div class="test-card"><h4>phases-7-10.test.ts</h4><p><span class="count">8 tests</span> — Test plans, analytics, agent assignments, GitHub</p></div>
+    <div class="test-card"><h4>priority-scoring.test.ts</h4><p><span class="count">6 tests</span> — Score calculation, severity weighting</p></div>
+    <div class="test-card"><h4>rate-limit.test.ts</h4><p><span class="count">3 tests</span> — Sliding window, 429 responses, key isolation</p></div>
+    <div class="test-card"><h4>schema.test.ts</h4><p><span class="count">1 test</span> — Prisma schema validity, 18 models present</p></div>
+    <div class="test-card"><h4>webhook-dispatcher.test.ts</h4><p><span class="count">2 tests</span> — HMAC-SHA256 signing, header format</p></div>
+  </div>
+
+  <h2>AI vs Human Testing Matrix</h2>
+  <p>What ClawQA's AI can verify automatically vs what must be escalated to Applause's human testers.</p>
+  <div class="matrix">
+    <div class="matrix-col ai">
+      <h3>🤖 AI Can Test (Automated)</h3>
+      <ul>
+        <li>API endpoint responses (status codes, JSON shape)</li>
+        <li>Authentication flows (Playwright headless)</li>
+        <li>Database CRUD operations</li>
+        <li>Webhook delivery & HMAC signatures</li>
+        <li>MCP JSON-RPC protocol compliance</li>
+        <li>Rate limiting (429 responses)</li>
+        <li>Priority scoring calculations</li>
+        <li>Escalation rule matching</li>
+        <li>Test plan versioning logic</li>
+        <li>API key generation & revocation</li>
+        <li>Data validation & error handling</li>
+        <li>Redirect chains (/docs → /docs/)</li>
+      </ul>
     </div>
-    <div class="er-entity" data-relations="User,TestCycle">
-      <div class="entity-name">📁 Project</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field">name: string</div>
-        <div class="field">slug: string</div>
-        <div class="field">url: string</div>
-        <div class="field"><span class="fk">FK</span> ownerId → User</div>
-        <div class="field">createdAt: datetime</div>
-      </div>
-    </div>
-    <div class="er-entity" data-relations="Project,User,TestExecution,BugReport">
-      <div class="entity-name">🔄 TestCycle</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field"><span class="fk">FK</span> projectId → Project</div>
-        <div class="field">title: string</div>
-        <div class="field">status: string</div>
-        <div class="field">applauseCycleId: string</div>
-        <div class="field"><span class="fk">FK</span> createdById → User</div>
-      </div>
-    </div>
-    <div class="er-entity" data-relations="TestCycle">
-      <div class="entity-name">📋 TestExecution</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field"><span class="fk">FK</span> cycleId → TestCycle</div>
-        <div class="field">title: string</div>
-        <div class="field">steps: string</div>
-        <div class="field">expectedResult: string</div>
-        <div class="field">status: string</div>
-      </div>
-    </div>
-    <div class="er-entity" data-relations="TestCycle,FixAttempt">
-      <div class="entity-name">🐛 BugReport</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field"><span class="fk">FK</span> cycleId → TestCycle</div>
-        <div class="field">title: string</div>
-        <div class="field">severity: string</div>
-        <div class="field">description: text</div>
-        <div class="field">screenshotUrl: string</div>
-        <div class="field">status: string</div>
-      </div>
-    </div>
-    <div class="er-entity" data-relations="BugReport">
-      <div class="entity-name">🔧 FixAttempt</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field"><span class="fk">FK</span> bugId → BugReport</div>
-        <div class="field">commitUrl: string</div>
-        <div class="field">deployUrl: string</div>
-        <div class="field">status: string</div>
-        <div class="field">createdAt: datetime</div>
-      </div>
-    </div>
-    <div class="er-entity" data-relations="User">
-      <div class="entity-name">📡 Webhook</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field"><span class="fk">FK</span> userId → User</div>
-        <div class="field">url: string</div>
-        <div class="field">events: string</div>
-        <div class="field">secret: string</div>
-      </div>
-    </div>
-    <div class="er-entity" data-relations="User">
-      <div class="entity-name">🔑 ApiKey</div>
-      <div class="entity-fields">
-        <div class="field"><span class="pk">PK</span> id: int</div>
-        <div class="field"><span class="fk">FK</span> userId → User</div>
-        <div class="field">key: string</div>
-        <div class="field">name: string</div>
-        <div class="field">expiresAt: datetime</div>
-      </div>
+    <div class="matrix-col human">
+      <h3>👤 Humans Must Test (Applause)</h3>
+      <ul>
+        <li>Real GitHub OAuth on phones (iOS Safari, Android Chrome)</li>
+        <li>Cross-browser visual rendering (glassmorphism, backdrop-blur)</li>
+        <li>Touch interactions (mobile nav hamburger, tap targets)</li>
+        <li>Real device performance (slow phones, tablets, 3G)</li>
+        <li>Accessibility (VoiceOver, TalkBack, screen readers)</li>
+        <li>Visual regressions (does it actually look right?)</li>
+        <li>Animated SVG diagrams across browsers</li>
+        <li>Copy-to-clipboard in code blocks</li>
+        <li>Password login UX (error states, loading)</li>
+        <li>Dashboard layout on small tablets</li>
+        <li>Telegram bot real-device interaction (Clawdet)</li>
+        <li>Concurrent multi-user scenarios</li>
+      </ul>
     </div>
   </div>
+
+  <h2>Infrastructure</h2>
+  <pre><code>Server:     Hetzner 135.181.43.68 (Ubuntu)
+Process:    PM2 → clawqa-nextjs (port 3150)
+Proxy:      Caddy → TLS + gzip + reverse proxy
+Database:   SQLite → /var/www/clawqa-nextjs/prisma/dev.db
+Docs:       Static HTML → /var/www/clawqa-nextjs/public/docs/
+Domain:     clawqa.ai (Caddy auto-TLS)
+Repo:       github.com/yoniassia/clawqa (v1.0.0)
+CI:         Manual (npm test + npx playwright test)
+Monitoring: PM2 logs + Caddy access logs</code></pre>
+
 </div>
-
-<script>
-function toggleNode(el) {
-  el.classList.toggle('expanded');
-}
-
-// Horizontal flow animation
-const flowObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      const steps = entry.target.querySelectorAll('.h-flow-step');
-      const arrows = entry.target.querySelectorAll('.h-flow-arrow');
-      steps.forEach((s, i) => setTimeout(() => { s.classList.add('lit'); if (arrows[i]) arrows[i].classList.add('lit'); }, i * 400));
-    }
-  });
-}, { threshold: 0.3 });
-document.querySelectorAll('.h-flow').forEach(f => flowObserver.observe(f));
-
-// ER hover highlight
-document.querySelectorAll('.er-entity').forEach(entity => {
-  entity.addEventListener('mouseenter', () => {
-    const rels = entity.dataset.relations?.split(',') || [];
-    document.querySelectorAll('.er-entity').forEach(e => {
-      const name = e.querySelector('.entity-name').textContent.trim().split(' ').pop();
-      if (rels.some(r => name.includes(r))) {
-        e.style.borderColor = 'var(--blue)';
-        e.style.boxShadow = '0 0 15px rgba(79,143,255,0.2)';
-      }
-    });
-  });
-  entity.addEventListener('mouseleave', () => {
-    document.querySelectorAll('.er-entity').forEach(e => {
-      e.style.borderColor = '';
-      e.style.boxShadow = '';
-    });
-  });
-});
-</script>
+<script>hljs.highlightAll();</script>
 </body>
 </html>
