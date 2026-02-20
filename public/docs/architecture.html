@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClawQA.AI — Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--green:#00ff88;--blue:#4f8fff;--purple:#8b5cf6;--red:#ff4757;--text:#e8e8f0;--dim:#8888a0;--border:#1e1e30}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
+  nav{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;max-width:1000px;margin:0 auto;backdrop-filter:blur(20px);background:rgba(10,10,15,0.8);position:sticky;top:0;z-index:100}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;transition:color 0.3s}nav a:hover{color:var(--text)}nav a.active{color:var(--text);font-weight:600}nav a.back{color:var(--green);margin-left:auto}
+  .content{max-width:900px;margin:0 auto;padding:40px 24px}
+  h1{font-size:2.5rem;font-weight:700;margin-bottom:8px}
+  h2{font-size:1.5rem;font-weight:600;margin:48px 0 16px;color:var(--green)}
+  h3{font-size:1.1rem;font-weight:600;margin:24px 0 12px}
+  p{margin-bottom:16px;color:var(--dim)}
+  ul{margin:0 0 16px 24px;color:var(--dim)}li{margin-bottom:8px}
+  code{font-family:'JetBrains Mono',monospace;background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:0.85em;color:var(--text)}
+  pre{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:16px 0}
+  pre code{background:none;padding:0;font-size:0.85em}
+  a{color:var(--blue)}strong{color:var(--text)}
+  .subtitle{font-size:1.1rem;color:var(--dim);margin-bottom:32px}
+  .badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:0.75rem;font-weight:500}
+  .badge.purple{background:rgba(139,92,246,0.15);color:var(--purple)}
+  table{width:100%;border-collapse:collapse;margin:16px 0}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:0.9rem}
+  th{color:var(--green);font-weight:600}td{color:var(--dim)}
+
+  /* Interactive architecture diagram */
+  .arch-diagram{position:relative;margin:32px 0;min-height:400px}
+  .arch-group{margin-bottom:12px}
+  .arch-group-label{font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:8px;font-weight:600}
+  .arch-nodes{display:flex;flex-wrap:wrap;gap:12px}
+  .arch-node{background:rgba(18,18,26,0.7);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);position:relative;min-width:140px}
+  .arch-node:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,136,0.15)}
+  .arch-node.expanded{border-color:var(--green);box-shadow:0 8px 30px rgba(0,255,136,0.15)}
+  .arch-node .node-title{font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:8px}
+  .arch-node .node-title .icon{font-size:1.2rem}
+  .arch-node .node-detail{max-height:0;overflow:hidden;transition:max-height 0.4s ease,margin 0.4s ease,opacity 0.3s;opacity:0;font-size:0.8rem;color:var(--dim);margin-top:0}
+  .arch-node.expanded .node-detail{max-height:200px;opacity:1;margin-top:12px}
+  .arch-node .expand-hint{position:absolute;top:8px;right:12px;font-size:0.7rem;color:var(--dim);transition:transform 0.3s}
+  .arch-node.expanded .expand-hint{transform:rotate(180deg)}
+
+  /* SVG connections */
+  .arch-connections{margin:16px 0}
+  .arch-connections svg{width:100%;height:60px}
+  .conn-line{stroke-dasharray:6 3;animation:dashFlow 1s linear infinite}
+  @keyframes dashFlow{to{stroke-dashoffset:-9}}
+
+  /* Horizontal flow */
+  .h-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:24px 0;margin:24px 0}
+  .h-flow-step{background:rgba(18,18,26,0.7);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:16px;min-width:160px;text-align:center;flex-shrink:0;opacity:0.3;transition:all 0.6s;position:relative}
+  .h-flow-step.lit{opacity:1;border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,0.15)}
+  .h-flow-step .step-num{width:28px;height:28px;border-radius:50%;background:var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;margin-bottom:8px;transition:all 0.6s}
+  .h-flow-step.lit .step-num{background:var(--green);color:var(--bg)}
+  .h-flow-step .step-label{font-size:0.8rem;font-weight:600;color:var(--text)}
+  .h-flow-step .step-sub{font-size:0.7rem;color:var(--dim);margin-top:4px}
+  .h-flow-arrow{color:var(--green);font-size:1.2rem;margin:0 4px;flex-shrink:0;opacity:0.3;transition:opacity 0.6s}
+  .h-flow-arrow.lit{opacity:1}
+
+  /* Circular auto-fix loop */
+  .loop-container{display:flex;justify-content:center;margin:32px 0}
+  .loop-svg{width:360px;height:360px}
+  .loop-node-bg{fill:rgba(18,18,26,0.9);stroke:var(--border);stroke-width:1}
+  .loop-node-bg:hover{stroke:var(--green)}
+  .loop-text{fill:var(--text);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;text-anchor:middle}
+  .loop-subtext{fill:var(--dim);font-family:'Inter',sans-serif;font-size:9px;text-anchor:middle}
+  .loop-arrow{fill:none;stroke:var(--green);stroke-width:2;stroke-dasharray:6 3;animation:dashFlow 1.2s linear infinite}
+  .loop-spinner{animation:spinLoop 8s linear infinite;transform-origin:180px 180px}
+  @keyframes spinLoop{to{transform:rotate(360deg)}}
+
+  /* ER Diagram */
+  .er-diagram{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0}
+  .er-entity{background:rgba(18,18,26,0.7);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.3s}
+  .er-entity:hover{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,0.1)}
+  .er-entity .entity-name{background:rgba(0,255,136,0.1);padding:10px 14px;font-weight:600;font-size:0.85rem;border-bottom:1px solid var(--border)}
+  .er-entity .entity-fields{padding:8px 14px}
+  .er-entity .field{font-size:0.75rem;color:var(--dim);padding:2px 0;font-family:'JetBrains Mono',monospace}
+  .er-entity .field .pk{color:var(--green);font-weight:600}
+  .er-entity .field .fk{color:var(--blue);font-weight:500}
+
+  /* Glass table */
+  .table-glass{background:rgba(18,18,26,0.6);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin:24px 0}
+  .table-glass table{margin:0}
+  .table-glass th{padding:14px;background:rgba(0,255,136,0.05)}
+  .table-glass td{padding:10px 14px}
+  .table-glass tr:hover td{background:rgba(0,255,136,0.03)}
+
+  @media(max-width:600px){h1{font-size:2rem}.arch-nodes{flex-direction:column}.h-flow{flex-direction:column}.h-flow-arrow{transform:rotate(90deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;opacity:1!important;transform:none!important}}</style>
+</head>
+<body>
+<nav>
+  <a href="/docs/">Hub</a>
+  <a href="/docs/overview.html">Overview</a>
+  <a href="/docs/architecture.html" class="active">Architecture</a>
+  <a href="/docs/for-project-managers.html">For PMs</a>
+  <a href="/docs/for-agents.html">For Agents</a>
+  <a href="/docs/phases.html">Roadmap</a>
+  <a href="/" class="back">← Back to App</a>
+</nav>
+<div class="content">
+  <h1>Technical Architecture</h1>
+  <p class="subtitle">System design, data flows, API surface, and database schema</p>
+
+  <h2>System Architecture</h2>
+  <p>ClawQA sits between two user types (Project Managers and AI Agents) and the external Applause testing platform. <em>Click any node to expand details.</em></p>
+
+  <div class="arch-diagram">
+    <div class="arch-group">
+      <div class="arch-group-label">👥 Users</div>
+      <div class="arch-nodes">
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">👤</span> Project Manager</div>
+          <div class="node-detail">Uses the ClawQA dashboard to create projects, assign AI agents, monitor test cycles, review bug reports, and approve releases. Authenticates via GitHub OAuth.</div>
+        </div>
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">🤖</span> OpenClaw Agent</div>
+          <div class="node-detail">Connects via REST API (Bearer token) or MCP. Creates test cycles, receives bug webhooks, submits fixes. Uses API keys prefixed with <code>cqa_</code>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-connections">
+      <svg viewBox="0 0 800 60" fill="none"><line x1="100" y1="10" x2="400" y2="50" stroke="#00ff88" stroke-width="1.5" class="conn-line"/><line x1="300" y1="10" x2="400" y2="50" stroke="#4f8fff" stroke-width="1.5" class="conn-line"/></svg>
+    </div>
+
+    <div class="arch-group">
+      <div class="arch-group-label">🦞 ClawQA Platform</div>
+      <div class="arch-nodes">
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">🔌</span> REST API</div>
+          <div class="node-detail">Full REST API at <code>/api/v1/*</code> — projects, test cycles, bug reports, fix submissions, webhooks, API keys. JSON request/response format.</div>
+        </div>
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">🔐</span> Auth</div>
+          <div class="node-detail">GitHub OAuth for dashboard users. API key authentication for agents. Session management with secure cookies.</div>
+        </div>
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">💾</span> Database</div>
+          <div class="node-detail">SQLite (dev) / PostgreSQL (prod). Stores users, projects, test cycles, test executions, bug reports, fix attempts, webhooks, and API keys.</div>
+        </div>
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">📡</span> Webhook Dispatcher</div>
+          <div class="node-detail">Event-driven system dispatching bug_report.created, bug_report.verified, bug_report.fix_failed, and cycle.completed events to registered endpoints.</div>
+        </div>
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">🧩</span> MCP Server</div>
+          <div class="node-detail">Model Context Protocol server (coming soon) at <code>https://clawqa.ai/mcp</code>. Exposes ClawQA tools for any MCP-compatible AI agent.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-connections">
+      <svg viewBox="0 0 800 60" fill="none"><line x1="200" y1="10" x2="400" y2="50" stroke="#8b5cf6" stroke-width="1.5" class="conn-line"/><line x1="600" y1="10" x2="400" y2="50" stroke="#4f8fff" stroke-width="1.5" class="conn-line"/></svg>
+    </div>
+
+    <div class="arch-group">
+      <div class="arch-group-label">🌐 External</div>
+      <div class="arch-nodes">
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">🧪</span> Applause API</div>
+          <div class="node-detail">api.applause.com — Creates test cycles, matches testers to devices, receives test results, and sends bug reports back via webhook.</div>
+        </div>
+        <div class="arch-node" onclick="toggleNode(this)">
+          <span class="expand-hint">▼</span>
+          <div class="node-title"><span class="icon">🐙</span> GitHub</div>
+          <div class="node-detail">OAuth provider for user authentication. Future: auto-create test cycles from PRs, link bugs to issues, post fix status as PR comments.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Data Flow: Test Cycle Creation</h2>
+  <p>When an AI agent creates a new test cycle, this is the full sequence from submission to tester execution:</p>
+
+  <div class="h-flow" id="cycleFlow">
+    <div class="h-flow-step"><div class="step-num">1</div><div class="step-label">Agent POST</div><div class="step-sub">/api/v1/test-cycles</div></div>
+    <div class="h-flow-arrow">→</div>
+    <div class="h-flow-step"><div class="step-num">2</div><div class="step-label">Validate Key</div><div class="step-sub">Auth check</div></div>
+    <div class="h-flow-arrow">→</div>
+    <div class="h-flow-step"><div class="step-num">3</div><div class="step-label">Store in DB</div><div class="step-sub">Create records</div></div>
+    <div class="h-flow-arrow">→</div>
+    <div class="h-flow-step"><div class="step-num">4</div><div class="step-label">Send to Applause</div><div class="step-sub">Create cycle</div></div>
+    <div class="h-flow-arrow">→</div>
+    <div class="h-flow-step"><div class="step-num">5</div><div class="step-label">Testers Execute</div><div class="step-sub">Real devices</div></div>
+    <div class="h-flow-arrow">→</div>
+    <div class="h-flow-step"><div class="step-num">6</div><div class="step-label">Results Webhook</div><div class="step-sub">Bugs dispatched</div></div>
+  </div>
+
+  <h2>Data Flow: Auto-Fix Loop</h2>
+  <p>When a bug is received, the AI agent enters the auto-fix loop — analyzing, fixing, and re-submitting until the fix is verified:</p>
+
+  <div class="loop-container">
+    <svg class="loop-svg" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Spinning indicator -->
+      <g class="loop-spinner">
+        <circle cx="180" cy="30" r="5" fill="#00ff88" opacity="0.6"/>
+      </g>
+      <!-- Circle path -->
+      <circle cx="180" cy="180" r="130" stroke="var(--border)" stroke-width="1" fill="none"/>
+      <circle cx="180" cy="180" r="130" stroke="url(#loopGrad)" stroke-width="2" fill="none" class="loop-arrow" stroke-dasharray="20 10"/>
+      <defs><linearGradient id="loopGrad" x1="0" y1="0" x2="360" y2="360"><stop offset="0%" stop-color="#00ff88"/><stop offset="50%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+
+      <!-- Nodes on the circle -->
+      <!-- Top: Receive Bug -->
+      <rect x="120" y="20" width="120" height="44" rx="10" class="loop-node-bg"/>
+      <text x="180" y="40" class="loop-text">🐛 Receive Bug</text>
+      <text x="180" y="54" class="loop-subtext">Webhook event</text>
+
+      <!-- Right: Analyze & Fix -->
+      <rect x="270" y="120" width="80" height="44" rx="10" class="loop-node-bg"/>
+      <text x="310" y="140" class="loop-text">🔍 Analyze</text>
+      <text x="310" y="154" class="loop-subtext">Root cause</text>
+
+      <!-- Bottom-right: Deploy -->
+      <rect x="260" y="240" width="90" height="44" rx="10" class="loop-node-bg"/>
+      <text x="305" y="260" class="loop-text">🚀 Deploy</text>
+      <text x="305" y="274" class="loop-subtext">To staging</text>
+
+      <!-- Bottom: Submit Fix -->
+      <rect x="115" y="290" width="130" height="44" rx="10" class="loop-node-bg"/>
+      <text x="180" y="310" class="loop-text">📤 Submit Fix</text>
+      <text x="180" y="324" class="loop-subtext">POST /bugs/:id/fix</text>
+
+      <!-- Left: Re-test -->
+      <rect x="10" y="240" width="90" height="44" rx="10" class="loop-node-bg"/>
+      <text x="55" y="260" class="loop-text">🧪 Re-test</text>
+      <text x="55" y="274" class="loop-subtext">Applause</text>
+
+      <!-- Top-left: Verified? -->
+      <rect x="10" y="120" width="90" height="44" rx="10" class="loop-node-bg"/>
+      <text x="55" y="140" class="loop-text">✅ Verified?</text>
+      <text x="55" y="154" class="loop-subtext">Pass / Fail</text>
+    </svg>
+  </div>
+
+  <h2>MCP (Model Context Protocol) Integration</h2>
+  <p><span class="badge purple">Coming Soon</span></p>
+  <p>ClawQA exposes an MCP server so AI agents can interact with the platform using the <a href="https://spec.modelcontextprotocol.io" target="_blank">Model Context Protocol</a> — a standard for connecting AI models to external tools and data sources.</p>
+  <p>AI agents connecting via MCP can:</p>
+  <ul>
+    <li>List projects and test cycles</li>
+    <li>Create test cycles with AI-generated test steps</li>
+    <li>Read bug reports with full reproduction details</li>
+    <li>Submit fixes with commit and deploy URLs</li>
+    <li>Escalate cycles to Applause for crowd testing</li>
+    <li>Check cycle status and progress</li>
+  </ul>
+
+  <h3>MCP Tools</h3>
+  <pre><code>clawqa.list_projects()                              → [{id, name, slug, url}]
+clawqa.list_cycles(projectId?)                      → [{id, title, status, bugs}]
+clawqa.create_cycle(projectId, title, url, steps[]) → {id, status}
+clawqa.get_bugs(cycleId)                            → [{id, title, severity, steps}]
+clawqa.submit_fix(bugId, commitUrl, deployUrl)      → {status}
+clawqa.escalate(cycleId, reason?)                   → {applauseCycleId}</code></pre>
+  <p><strong>MCP endpoint:</strong> <code>https://clawqa.ai/mcp</code> (coming soon)<br>
+  <strong>REST API equivalent:</strong> <code>https://clawqa.ai/api/v1/*</code> (available now)</p>
+
+  <h2>API Endpoint Map</h2>
+  <p>Complete list of REST API endpoints. All endpoints are prefixed with <code>/api/v1</code>.</p>
+
+  <div class="table-glass">
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET</code></td><td>/api/v1/projects</td><td>None</td><td>List all projects</td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/projects/:slug</td><td>None</td><td>Get project details by slug</td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/test-cycles</td><td>None</td><td>List all test cycles</td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/test-cycles</td><td>API Key</td><td>Create a new test cycle</td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/test-cycles/:id</td><td>None</td><td>Get cycle details</td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/test-cycles/:id/bugs</td><td>None</td><td>List bugs for a cycle</td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/bugs</td><td>API Key</td><td>Create a bug report</td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/bugs/:id/fix</td><td>API Key</td><td>Submit a fix for a bug</td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/escalate</td><td>API Key</td><td>Escalate cycle to Applause</td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/webhooks</td><td>API Key</td><td>Register a webhook endpoint</td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/webhooks</td><td>API Key</td><td>List registered webhooks</td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/applause/webhook</td><td>Applause</td><td>Receive results from Applause</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Database Schema</h2>
+  <p>Core entities and their relationships. <em>Hover to highlight.</em></p>
+
+  <div class="er-diagram">
+    <div class="er-entity" data-relations="Project,ApiKey,Webhook,TestCycle">
+      <div class="entity-name">👤 User</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field">githubId: string</div>
+        <div class="field">username: string</div>
+        <div class="field">email: string</div>
+        <div class="field">role: string</div>
+        <div class="field">createdAt: datetime</div>
+      </div>
+    </div>
+    <div class="er-entity" data-relations="User,TestCycle">
+      <div class="entity-name">📁 Project</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field">name: string</div>
+        <div class="field">slug: string</div>
+        <div class="field">url: string</div>
+        <div class="field"><span class="fk">FK</span> ownerId → User</div>
+        <div class="field">createdAt: datetime</div>
+      </div>
+    </div>
+    <div class="er-entity" data-relations="Project,User,TestExecution,BugReport">
+      <div class="entity-name">🔄 TestCycle</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field"><span class="fk">FK</span> projectId → Project</div>
+        <div class="field">title: string</div>
+        <div class="field">status: string</div>
+        <div class="field">applauseCycleId: string</div>
+        <div class="field"><span class="fk">FK</span> createdById → User</div>
+      </div>
+    </div>
+    <div class="er-entity" data-relations="TestCycle">
+      <div class="entity-name">📋 TestExecution</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field"><span class="fk">FK</span> cycleId → TestCycle</div>
+        <div class="field">title: string</div>
+        <div class="field">steps: string</div>
+        <div class="field">expectedResult: string</div>
+        <div class="field">status: string</div>
+      </div>
+    </div>
+    <div class="er-entity" data-relations="TestCycle,FixAttempt">
+      <div class="entity-name">🐛 BugReport</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field"><span class="fk">FK</span> cycleId → TestCycle</div>
+        <div class="field">title: string</div>
+        <div class="field">severity: string</div>
+        <div class="field">description: text</div>
+        <div class="field">screenshotUrl: string</div>
+        <div class="field">status: string</div>
+      </div>
+    </div>
+    <div class="er-entity" data-relations="BugReport">
+      <div class="entity-name">🔧 FixAttempt</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field"><span class="fk">FK</span> bugId → BugReport</div>
+        <div class="field">commitUrl: string</div>
+        <div class="field">deployUrl: string</div>
+        <div class="field">status: string</div>
+        <div class="field">createdAt: datetime</div>
+      </div>
+    </div>
+    <div class="er-entity" data-relations="User">
+      <div class="entity-name">📡 Webhook</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field"><span class="fk">FK</span> userId → User</div>
+        <div class="field">url: string</div>
+        <div class="field">events: string</div>
+        <div class="field">secret: string</div>
+      </div>
+    </div>
+    <div class="er-entity" data-relations="User">
+      <div class="entity-name">🔑 ApiKey</div>
+      <div class="entity-fields">
+        <div class="field"><span class="pk">PK</span> id: int</div>
+        <div class="field"><span class="fk">FK</span> userId → User</div>
+        <div class="field">key: string</div>
+        <div class="field">name: string</div>
+        <div class="field">expiresAt: datetime</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleNode(el) {
+  el.classList.toggle('expanded');
+}
+
+// Horizontal flow animation
+const flowObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const steps = entry.target.querySelectorAll('.h-flow-step');
+      const arrows = entry.target.querySelectorAll('.h-flow-arrow');
+      steps.forEach((s, i) => setTimeout(() => { s.classList.add('lit'); if (arrows[i]) arrows[i].classList.add('lit'); }, i * 400));
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.h-flow').forEach(f => flowObserver.observe(f));
+
+// ER hover highlight
+document.querySelectorAll('.er-entity').forEach(entity => {
+  entity.addEventListener('mouseenter', () => {
+    const rels = entity.dataset.relations?.split(',') || [];
+    document.querySelectorAll('.er-entity').forEach(e => {
+      const name = e.querySelector('.entity-name').textContent.trim().split(' ').pop();
+      if (rels.some(r => name.includes(r))) {
+        e.style.borderColor = 'var(--blue)';
+        e.style.boxShadow = '0 0 15px rgba(79,143,255,0.2)';
+      }
+    });
+  });
+  entity.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.er-entity').forEach(e => {
+      e.style.borderColor = '';
+      e.style.boxShadow = '';
+    });
+  });
+});
+</script>
+</body>
+</html>

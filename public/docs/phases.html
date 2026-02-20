@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClawQA.AI — Roadmap</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--green:#00ff88;--blue:#4f8fff;--purple:#8b5cf6;--red:#ff4757;--text:#e8e8f0;--dim:#8888a0;--border:#1e1e30}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
+  nav{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;max-width:1000px;margin:0 auto;backdrop-filter:blur(20px);background:rgba(10,10,15,0.8);position:sticky;top:0;z-index:100}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;transition:color 0.3s}nav a:hover{color:var(--text)}nav a.active{color:var(--text);font-weight:600}nav a.back{color:var(--green);margin-left:auto}
+  .content{max-width:900px;margin:0 auto;padding:40px 24px}
+  h1{font-size:2.5rem;font-weight:700;margin-bottom:8px}
+  p{margin-bottom:16px;color:var(--dim)}
+  a{color:var(--blue)}strong{color:var(--text)}
+  code{font-family:'JetBrains Mono',monospace;background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:0.85em}
+  .subtitle{font-size:1.1rem;color:var(--dim);margin-bottom:32px}
+
+  /* Animated progress bar */
+  .progress-container{background:rgba(18,18,26,0.6);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:40px}
+  .progress-label{display:flex;justify-content:space-between;margin-bottom:10px;font-size:0.9rem}
+  .progress-label span:first-child{color:var(--text);font-weight:600}
+  .progress-label span:last-child{color:var(--green);font-weight:600}
+  .progress-bar{background:var(--bg);border-radius:8px;height:14px;overflow:hidden;position:relative}
+  .progress-fill{background:linear-gradient(90deg,var(--green),var(--blue));height:100%;border-radius:8px;width:0;transition:width 1.5s cubic-bezier(0.175,0.885,0.32,1.275)}
+  .progress-fill.animated{width:23%}
+  .progress-fill::after{content:'';position:absolute;top:0;right:0;width:30px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2));animation:shimmer 2s ease-in-out infinite}
+  @keyframes shimmer{0%,100%{opacity:0}50%{opacity:1}}
+
+  /* Stats */
+  .stats{display:flex;gap:24px;justify-content:center;margin:24px 0 40px;flex-wrap:wrap}
+  .stat{text-align:center}
+  .stat-num{font-size:2rem;font-weight:700;color:var(--green)}
+  .stat-label{font-size:0.8rem;color:var(--dim)}
+
+  /* Vertical timeline */
+  .timeline{position:relative;padding-left:60px;margin:32px 0}
+  .timeline::before{content:'';position:absolute;left:24px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--green) 23%,var(--blue) 23%,var(--blue) 26%,var(--border) 26%)}
+
+  .tl-item{position:relative;margin-bottom:0;padding-bottom:32px;opacity:0;transform:translateX(-30px);transition:all 0.6s cubic-bezier(0.175,0.885,0.32,1.275)}
+  .tl-item.visible{opacity:1;transform:translateX(0)}
+
+  /* Node dot */
+  .tl-dot{position:absolute;left:-43px;top:4px;width:18px;height:18px;border-radius:50%;border:3px solid var(--border);background:var(--bg);transition:all 0.4s;z-index:2}
+  .tl-item.done .tl-dot{border-color:var(--green);background:var(--green);box-shadow:0 0 12px rgba(0,255,136,0.5)}
+  .tl-item.active .tl-dot{border-color:var(--blue);background:var(--blue);box-shadow:0 0 12px rgba(79,143,255,0.5);animation:activePulse 2s ease-in-out infinite}
+  @keyframes activePulse{0%,100%{box-shadow:0 0 12px rgba(79,143,255,0.5)}50%{box-shadow:0 0 24px rgba(79,143,255,0.8)}}
+
+  .tl-card{background:rgba(18,18,26,0.6);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:20px;transition:all 0.3s}
+  .tl-card:hover{border-color:rgba(0,255,136,0.2);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+  .tl-item.done .tl-card{border-color:rgba(0,255,136,0.15)}
+  .tl-item.active .tl-card{border-color:rgba(79,143,255,0.3)}
+
+  .tl-header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .tl-number{font-size:0.8rem;font-weight:700;color:var(--dim);min-width:32px}
+  .tl-item.done .tl-number{color:var(--green)}
+  .tl-item.active .tl-number{color:var(--blue)}
+  .tl-title{font-weight:600;font-size:1rem;flex:1}
+  .tl-status{font-size:0.75rem;font-weight:500;padding:3px 12px;border-radius:99px;white-space:nowrap}
+  .tl-status.done{background:rgba(0,255,136,0.15);color:var(--green)}
+  .tl-status.active{background:rgba(79,143,255,0.15);color:var(--blue)}
+  .tl-status.planned{background:rgba(136,136,160,0.1);color:var(--dim)}
+  .tl-desc{font-size:0.85rem;color:var(--dim);margin:0}
+
+  @media(max-width:600px){h1{font-size:2rem}.stats{flex-direction:column;align-items:center}.timeline{padding-left:48px}.tl-dot{left:-31px;width:14px;height:14px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;opacity:1!important;transform:none!important}}</style>
+</head>
+<body>
+<nav>
+  <a href="/docs/">Hub</a>
+  <a href="/docs/overview.html">Overview</a>
+  <a href="/docs/architecture.html">Architecture</a>
+  <a href="/docs/for-project-managers.html">For PMs</a>
+  <a href="/docs/for-agents.html">For Agents</a>
+  <a href="/docs/phases.html" class="active">Roadmap</a>
+  <a href="/" class="back">← Back to App</a>
+</nav>
+<div class="content">
+  <h1>Development Roadmap</h1>
+  <p class="subtitle">13 phases from authentication to full MCP integration</p>
+
+  <div class="progress-container" id="progressContainer">
+    <div class="progress-label">
+      <span>Overall Progress</span>
+      <span><span class="counter" data-target="3">0</span> / <span class="counter" data-target="13">0</span> phases complete (<span class="counter" data-target="23">0</span>%)</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-item done">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 1</span>
+          <span class="tl-title">Authentication &amp; User Management</span>
+          <span class="tl-status done">✅ Complete</span>
+        </div>
+        <p class="tl-desc">GitHub OAuth login, user roles (Project Manager, Agent), session management, and account settings.</p>
+      </div>
+    </div>
+
+    <div class="tl-item done">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 2</span>
+          <span class="tl-title">REST API &amp; Core Endpoints</span>
+          <span class="tl-status done">✅ Complete</span>
+        </div>
+        <p class="tl-desc">Full REST API at <code>/api/v1/*</code> — projects, test cycles, bug reports, fix submissions, webhook registration, API key management.</p>
+      </div>
+    </div>
+
+    <div class="tl-item done">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 3</span>
+          <span class="tl-title">Project Manager Dashboard</span>
+          <span class="tl-status done">✅ Complete</span>
+        </div>
+        <p class="tl-desc">Dashboard for project managers to create projects, assign AI agents, monitor test cycles, view bugs, and approve releases.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 4</span>
+          <span class="tl-title">Applause API Integration</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Connect to Applause's API to create test cycles, receive results, and route bug reports back to AI agents via webhooks.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 5</span>
+          <span class="tl-title">Webhook Dispatcher</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Event-driven webhook system that notifies AI agents of new bugs, verified fixes, and cycle completions in real time.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 6</span>
+          <span class="tl-title">Auto-Fix Loop Engine</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Automated pipeline: receive bug → dispatch to agent → accept fix submission → request re-test → verify → close or retry.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 7</span>
+          <span class="tl-title">Test Plan Generation API</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Endpoints for AI agents to submit generated test plans with structured steps, expected results, and device requirements.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 8</span>
+          <span class="tl-title">Bug Report Analytics</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Severity distribution, fix rate tracking, average time-to-fix, and per-project quality metrics on the dashboard.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 9</span>
+          <span class="tl-title">Multi-Agent Support</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Allow multiple AI agents per project, with role-based access and parallel test cycle execution.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 10</span>
+          <span class="tl-title">GitHub Integration</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Auto-create test cycles from PRs, link bug reports to GitHub issues, and post fix status as PR comments.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 11</span>
+          <span class="tl-title">Escalation &amp; Priority Routing</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Smart routing of critical bugs, escalation to Applause's premium tester pools, and SLA-based prioritization.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 12</span>
+          <span class="tl-title">Public API &amp; Developer Portal</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Public API documentation, SDKs (Python, JavaScript), rate limiting, and a developer portal with interactive API explorer.</p>
+      </div>
+    </div>
+
+    <div class="tl-item planned">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-header">
+          <span class="tl-number">Phase 13</span>
+          <span class="tl-title">MCP Server</span>
+          <span class="tl-status planned">Planned</span>
+        </div>
+        <p class="tl-desc">Model Context Protocol server at <code>https://clawqa.ai/mcp</code> — enabling any MCP-compatible AI agent to discover and use ClawQA tools natively.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Scroll-triggered animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      const delay = Array.from(document.querySelectorAll('.tl-item')).indexOf(entry.target) * 80;
+      setTimeout(() => entry.target.classList.add('visible'), delay);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+document.querySelectorAll('.tl-item').forEach(item => observer.observe(item));
+
+// Animated progress bar
+const progressObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.getElementById('progressFill').classList.add('animated');
+      // Animate counters
+      document.querySelectorAll('.counter').forEach(c => {
+        const target = parseInt(c.dataset.target);
+        let current = 0;
+        const step = Math.max(1, Math.floor(target / 30));
+        const interval = setInterval(() => {
+          current = Math.min(current + step, target);
+          c.textContent = current;
+          if (current >= target) clearInterval(interval);
+        }, 30);
+      });
+      progressObserver.disconnect();
+    }
+  });
+}, { threshold: 0.5 });
+
+progressObserver.observe(document.getElementById('progressContainer'));
+</script>
+</body>
+</html>

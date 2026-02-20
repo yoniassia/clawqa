@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id               String            @id @default(cuid())
+  name             String?
+  email            String?           @unique
+  emailVerified    DateTime?
+  image            String?
+  role             String            @default("tester")
+  createdAt        DateTime          @default(now())
+  accounts         Account[]
+  sessions         Session[]
+  apiKeys          ApiKey[]
+  testerProfile    TesterProfile?
+  projects         Project[]
+  testExecutions   TestExecution[]
+  bugReports       BugReport[]
+  webhooks         Webhook[]
+  testPlans        TestPlan[]        @relation("TestPlanCreator")
+  agentAssignments AgentAssignment[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  keyHash    String    @unique
+  keyPrefix  String
+  name       String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TesterProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  devices   String @default("[]")
+  languages String @default("[]")
+  country   String @default("")
+  bio       String @default("")
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id                  String            @id @default(cuid())
+  name                String
+  slug                String            @unique
+  description         String            @default("")
+  targetUrl           String            @default("")
+  repoUrl             String            @default("")
+  autoFixEnabled      Boolean           @default(false)
+  ownerId             String
+  createdAt           DateTime          @default(now())
+  owner               User              @relation(fields: [ownerId], references: [id])
+  testCycles       TestCycle[]
+  escalationRules EscalationRule[]
+  testPlans           TestPlan[]
+  agentAssignments    AgentAssignment[]
+  githubOwner         String            @default("")
+  githubRepo          String            @default("")
+  githubWebhookSecret String            @default("")
+}
+
+model TestCycle {
+  id             String          @id @default(cuid())
+  projectId      String
+  title          String
+  description    String          @default("")
+  targetUrl      String
+  priority       String          @default("normal")
+  status         String          @default("open")
+  stepsJson      String          @default("[]")
+  deviceReqs     String          @default("[]")
+  createdAt      DateTime        @default(now())
+  createdById    String?         @default("")
+  prUrl          String          @default("")
+  prNumber       Int?            @default(0)
+  updatedAt      DateTime        @updatedAt
+  project        Project         @relation(fields: [projectId], references: [id])
+  bugReports     BugReport[]
+  testExecutions TestExecution[]
+}
+
+model TestExecution {
+  id          String    @id @default(cuid())
+  cycleId     String
+  testerId    String
+  status      String    @default("claimed")
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  resultsJson String    @default("[]")
+  cycle       TestCycle @relation(fields: [cycleId], references: [id])
+  tester      User      @relation(fields: [testerId], references: [id])
+}
+
+model BugReport {
+  id               String       @id @default(cuid())
+  cycleId          String
+  reporterId       String
+  title            String
+  severity         String       @default("minor")
+  status           String       @default("new")
+  stepsToReproduce String       @default("")
+  expectedResult   String       @default("")
+  actualResult     String       @default("")
+  deviceInfo       String       @default("{}")
+  screenshotUrls   String       @default("[]")
+  priorityScore    Int          @default(0)
+  releaseBlocker   Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  cycle            TestCycle    @relation(fields: [cycleId], references: [id])
+  reporter         User         @relation(fields: [reporterId], references: [id])
+  fixAttempts      FixAttempt[]
+  autoFixJobs      AutoFixJob[]
+}
+
+model FixAttempt {
+  id          String       @id @default(cuid())
+  bugId       String
+  commitUrl   String       @default("")
+  deployUrl   String       @default("")
+  notes       String       @default("")
+  status      String       @default("pending")
+  createdAt   DateTime     @default(now())
+  bug         BugReport    @relation(fields: [bugId], references: [id])
+  autoFixJobs AutoFixJob[]
+}
+
+model Webhook {
+  id         String            @id @default(cuid())
+  userId     String
+  url        String
+  events     String            @default("[]")
+  secret     String
+  active     Boolean           @default(true)
+  createdAt  DateTime          @default(now())
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id           String   @id @default(cuid())
+  webhookId    String
+  event        String
+  payload      String
+  statusCode   Int?
+  responseBody String   @default("")
+  deliveredAt  DateTime @default(now())
+  duration     Int      @default(0)
+  success      Boolean  @default(false)
+  retryCount   Int      @default(0)
+  webhook      Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+}
+
+model AutoFixJob {
+  id             String      @id @default(cuid())
+  bugId          String
+  fixAttemptId   String?
+  status         String      @default("queued")
+  webhookPayload String      @default("{}")
+  startedAt      DateTime    @default(now())
+  completedAt    DateTime?
+  retryCount     Int         @default(0)
+  bug            BugReport   @relation(fields: [bugId], references: [id])
+  fixAttempt     FixAttempt? @relation(fields: [fixAttemptId], references: [id])
+}
+
+model TestPlan {
+  id          String            @id @default(cuid())
+  projectId   String
+  title       String
+  description String            @default("")
+  stepsJson   String            @default("[]")
+  deviceReqs  String            @default("[]")
+  browserReqs String            @default("[]")
+  priority    String            @default("normal")
+  version     Int               @default(1)
+  createdById String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  project     Project           @relation(fields: [projectId], references: [id])
+  createdBy   User              @relation("TestPlanCreator", fields: [createdById], references: [id])
+  history     TestPlanHistory[]
+}
+
+model TestPlanHistory {
+  id          String   @id @default(cuid())
+  testPlanId  String
+  version     Int
+  title       String
+  description String   @default("")
+  stepsJson   String   @default("[]")
+  deviceReqs  String   @default("[]")
+  browserReqs String   @default("[]")
+  priority    String   @default("normal")
+  createdAt   DateTime @default(now())
+  testPlan    TestPlan @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+}
+
+model AgentAssignment {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+  role        String   @default("contributor")
+  permissions String   @default("{}")
+  assignedAt  DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model EscalationRule {
+  id        String   @id @default(cuid())
+  projectId String
+  condition String   @default("{}")
+  action    String   @default("notify")
+  targetUrl String   @default("")
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id])
+}
