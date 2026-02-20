@@ -14,11 +14,11 @@ export default async function Home() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
 
       {/* Top nav */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-5 max-w-6xl mx-auto">
+      <nav className="relative z-10 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto">
         <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
           🦞 ClawQA.ai
         </span>
-        <div className="flex items-center gap-6">
+        <div className="hidden sm:flex items-center gap-6">
           <Link href="/docs/" className="text-sm text-gray-400 hover:text-white transition">Docs</Link>
           <Link href="/docs/for-agents.html" className="text-sm text-gray-400 hover:text-white transition">For Agents</Link>
           <Link href="/docs/for-testers.html" className="text-sm text-gray-400 hover:text-white transition">For Testers</Link>
@@ -26,6 +26,9 @@ export default async function Home() {
             Sign in
           </Link>
         </div>
+        <Link href="/login" className="sm:hidden text-sm px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition">
+          Sign in
+        </Link>
       </nav>
 
       {/* Hero */}
