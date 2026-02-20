@@ -1,13 +1,13 @@
 /**
- * Applause Automation API Client
- * Based on ApplauseOSS/common-python-reporter SDK
+ * CrowdTesting Automation API Client
+ * Based on CrowdTestingOSS/common-python-reporter SDK
  * Endpoints: prod-auto-api.cloud.applause.com
  */
 
 const DEFAULT_AUTO_API_URL = 'https://prod-auto-api.cloud.applause.com:443/';
 const DEFAULT_PUBLIC_API_URL = 'https://prod-public-api.cloud.applause.com:443/';
 
-export interface ApplauseConfig {
+export interface CrowdTestingConfig {
   apiKey: string;
   productId: number;
   autoApiBaseUrl?: string;
@@ -19,10 +19,10 @@ export type TestResultStatus = 'NOT_RUN' | 'IN_PROGRESS' | 'PASSED' | 'FAILED' |
 
 export type AssetType = 'SCREENSHOT' | 'FAILURE_SCREENSHOT' | 'VIDEO' | 'NETWORK_HAR' | 'CONSOLE_LOG' | 'BROWSER_LOG' | 'FRAMEWORK_LOG' | 'UNKNOWN';
 
-export class ApplauseClient {
-  private config: ApplauseConfig | null = null;
+export class CrowdTestingClient {
+  private config: CrowdTestingConfig | null = null;
 
-  constructor(config?: ApplauseConfig) {
+  constructor(config?: CrowdTestingConfig) {
     if (config) this.config = config;
   }
 
@@ -33,7 +33,7 @@ export class ApplauseClient {
   }
 
   private async request(method: string, path: string, body?: any) {
-    if (!this.config) throw new Error('Applause not configured. Add API key in Settings.');
+    if (!this.config) throw new Error('CrowdTesting not configured. Add API key in Settings.');
 
     const res = await fetch(`${this.autoApiUrl}${path}`, {
       method,
@@ -46,7 +46,7 @@ export class ApplauseClient {
 
     if (!res.ok) {
       const error = await res.text();
-      throw new Error(`Applause API error (${res.status}): ${error}`);
+      throw new Error(`CrowdTesting API error (${res.status}): ${error}`);
     }
 
     if (method === 'DELETE') return null;
@@ -54,7 +54,7 @@ export class ApplauseClient {
   }
 
   async startTestRun(tests: string[]): Promise<{ runId: number }> {
-    if (!this.config) throw new Error('Applause not configured. Add API key in Settings.');
+    if (!this.config) throw new Error('CrowdTesting not configured. Add API key in Settings.');
     return this.request('POST', 'api/v1.0/test-run/create', {
       tests,
       productId: this.config!.productId,
@@ -85,7 +85,7 @@ export class ApplauseClient {
   }
 
   async uploadAsset(resultId: number, file: Uint8Array, assetName: string, assetType: AssetType = 'SCREENSHOT'): Promise<void> {
-    if (!this.config) throw new Error('Applause not configured.');
+    if (!this.config) throw new Error('CrowdTesting not configured.');
 
     const formData = new FormData();
     formData.append('file', new Blob([file as BlobPart]), assetName);
@@ -107,8 +107,8 @@ export class ApplauseClient {
   }
 }
 
-let _client: ApplauseClient | null = null;
-export function getApplauseClient(): ApplauseClient {
+let _client: CrowdTestingClient | null = null;
+export function getCrowdTestingClient(): CrowdTestingClient {
   if (!_client) {
     const apiKey = process.env.APPLAUSE_API_KEY;
     const productId = process.env.APPLAUSE_PRODUCT_ID;
@@ -116,14 +116,14 @@ export function getApplauseClient(): ApplauseClient {
     const publicApiUrl = process.env.APPLAUSE_PUBLIC_API_URL;
 
     if (apiKey && productId) {
-      _client = new ApplauseClient({
+      _client = new CrowdTestingClient({
         apiKey,
         productId: parseInt(productId, 10),
         autoApiBaseUrl: autoApiUrl || undefined,
         publicApiBaseUrl: publicApiUrl || undefined,
       });
     } else {
-      _client = new ApplauseClient();
+      _client = new CrowdTestingClient();
     }
   }
   return _client;

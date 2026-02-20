@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Applause webhook payload — extract bug reports and test results
+    // CrowdTesting webhook payload — extract bug reports and test results
     const { event_type, test_cycle_id, bugs, results } = body;
 
     if (event_type === "bugs_found" && bugs?.length) {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
           data: {
             cycleId: test_cycle_id || cycle?.id || "",
             reporterId: cycle?.project?.ownerId || "",
-            title: bug.title || "Applause Bug Report",
+            title: bug.title || "CrowdTesting Bug Report",
             severity: bug.severity || "minor",
             stepsToReproduce: bug.stepsToReproduce || bug.description || "",
             expectedResult: bug.expectedResult || "",

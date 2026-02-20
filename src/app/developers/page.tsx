@@ -18,7 +18,7 @@ const endpoints = [
   { method: "POST", path: "/api/v1/bugs/:id/fix", desc: "Submit a fix for a bug", auth: true,
     body: '{"commitUrl":"https://github.com/...","notes":"Fixed null check"}',
     response: '{"id":"...","bugId":"...","status":"pending"}' },
-  { method: "POST", path: "/api/v1/escalate", desc: "Escalate cycle to Applause crowd testing", auth: false,
+  { method: "POST", path: "/api/v1/escalate", desc: "Escalate cycle to CrowdTesting crowd testing", auth: false,
     body: '{"cycleId":"...","reason":"Need human verification"}',
     response: '{"success":true,"runId":123,"estimatedTurnaround":"2-4 hours"}' },
   { method: "GET", path: "/api/v1/escalation-rules", desc: "List escalation rules (?projectId=)", auth: false,

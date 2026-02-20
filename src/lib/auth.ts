@@ -26,7 +26,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             user = await prisma.user.create({
               data: {
                 email: "demo@clawqa.ai",
-                name: "Applause Demo",
+                name: "ClawQA Demo",
                 role: "admin",
               },
             });

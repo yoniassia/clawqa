@@ -40,8 +40,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           + New Test Cycle
         </Link>
         <button className="px-5 py-2.5 bg-purple-600/80 hover:bg-purple-500 text-white font-medium rounded-lg transition-all text-sm"
-          title="Escalate to Applause crowd testers when AI can't resolve">
-          🚀 Escalate to Applause
+          title="Escalate to Testers crowd testers when AI can't resolve">
+          🚀 Escalate to Testers
         </button>
       </div>
 

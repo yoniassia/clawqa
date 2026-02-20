@@ -13,12 +13,12 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Applause settings
-  const [applauseKey, setApplauseKey] = useState("");
-  const [applauseProduct, setApplauseProduct] = useState("");
-  const [applauseAutoUrl, setApplauseAutoUrl] = useState("https://prod-auto-api.cloud.applause.com:443/");
-  const [applausePublicUrl, setApplausePublicUrl] = useState("https://prod-public-api.cloud.applause.com:443/");
-  const [applauseStatus, setApplauseStatus] = useState<"checking" | "configured" | "not_configured">("checking");
+  // CrowdTesting settings
+  const [crowdTestingKey, setCrowdTestingKey] = useState("");
+  const [crowdTestingProduct, setCrowdTestingProduct] = useState("");
+  const [crowdTestingAutoUrl, setCrowdTestingAutoUrl] = useState("https://prod-auto-api.cloud.crowdTesting.com:443/");
+  const [crowdTestingPublicUrl, setCrowdTestingPublicUrl] = useState("https://prod-public-api.cloud.crowdTesting.com:443/");
+  const [crowdTestingStatus, setCrowdTestingStatus] = useState<"checking" | "configured" | "not_configured">("checking");
   const [testingConnection, setTestingConnection] = useState(false);
   const [connectionResult, setConnectionResult] = useState("");
 
@@ -35,14 +35,14 @@ export default function SettingsPage() {
         }
       }
     });
-    fetch("/api/v1/applause/status")
+    fetch("/api/v1/crowdTesting/status")
       .then(r => r.json())
       .then(data => {
         // Using new status endpoint
-        if (data.configured === false) setApplauseStatus("not_configured");
-        else if (data.configured && data.reachable) setApplauseStatus("configured"); else setApplauseStatus("not_configured");
+        if (data.configured === false) setCrowdTestingStatus("not_configured");
+        else if (data.configured && data.reachable) setCrowdTestingStatus("configured"); else setCrowdTestingStatus("not_configured");
       })
-      .catch(() => setApplauseStatus("not_configured"));
+      .catch(() => setCrowdTestingStatus("not_configured"));
   }, []);
 
   async function handleSave() {
@@ -62,13 +62,13 @@ export default function SettingsPage() {
     setTestingConnection(true);
     setConnectionResult("");
     try {
-      const res = await fetch("/api/v1/applause/status");
+      const res = await fetch("/api/v1/crowdTesting/status");
       const data = await res.json();
       if (!data.configured) {
         setConnectionResult("❌ Not configured — set env vars on server");
       } else if (data.reachable) {
-        setConnectionResult("✅ Applause is configured and reachable");
-        setApplauseStatus("configured");
+        setConnectionResult("✅ CrowdTesting is configured and reachable");
+        setCrowdTestingStatus("configured");
       } else {
         setConnectionResult("⚠️ Configured but not reachable");
       }
@@ -119,43 +119,43 @@ export default function SettingsPage() {
         {message && <p className="mt-3 text-sm text-green-400">{message}</p>}
       </div>
 
-      {/* Applause Integration Section */}
+      {/* Testing Platform Integration Section */}
       <div className="bg-gray-800/40 backdrop-blur-lg border border-gray-700/50 rounded-2xl p-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Applause Integration</h2>
+          <h2 className="text-xl font-semibold">Testing Platform Integration</h2>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-            applauseStatus === "configured" ? "bg-green-500/20 text-green-400" :
-            applauseStatus === "not_configured" ? "bg-gray-500/20 text-gray-400" :
+            crowdTestingStatus === "configured" ? "bg-green-500/20 text-green-400" :
+            crowdTestingStatus === "not_configured" ? "bg-gray-500/20 text-gray-400" :
             "bg-yellow-500/20 text-yellow-400"
           }`}>
-            {applauseStatus === "checking" ? "Checking..." : applauseStatus === "configured" ? "✓ Connected" : "Not configured"}
+            {crowdTestingStatus === "checking" ? "Checking..." : crowdTestingStatus === "configured" ? "✓ Connected" : "Not configured"}
           </span>
         </div>
         <p className="text-gray-400 text-sm mb-6">
-          Connect to Applause to escalate test cycles to crowd testers. Uses the official Applause Automation API
-          (prod-auto-api.cloud.applause.com).
+          Connect to CrowdTesting to escalate test cycles to crowd testers. Uses the official CrowdTesting Automation API
+          (prod-auto-api.cloud.crowdTesting.com).
         </p>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-400 mb-2">API Key</label>
-            <input type="password" value={applauseKey} onChange={e => setApplauseKey(e.target.value)}
-              placeholder={applauseStatus === "configured" ? "••••••••••••" : "APPLAUSE_API_KEY env var"}
+            <input type="password" value={crowdTestingKey} onChange={e => setCrowdTestingKey(e.target.value)}
+              placeholder={crowdTestingStatus === "configured" ? "••••••••••••" : "API key not set"}
               className={inputClass} disabled />
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-2">Product ID</label>
-            <input type="number" value={applauseProduct} onChange={e => setApplauseProduct(e.target.value)}
-              placeholder={applauseStatus === "configured" ? "Configured" : "APPLAUSE_PRODUCT_ID env var"}
+            <input type="number" value={crowdTestingProduct} onChange={e => setCrowdTestingProduct(e.target.value)}
+              placeholder={crowdTestingStatus === "configured" ? "Configured" : "Product ID not set"}
               className={inputClass} disabled />
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-2">Auto API URL</label>
-            <input value={applauseAutoUrl} onChange={e => setApplauseAutoUrl(e.target.value)}
+            <input value={crowdTestingAutoUrl} onChange={e => setCrowdTestingAutoUrl(e.target.value)}
               className={inputClass} disabled />
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-2">Public API URL</label>
-            <input value={applausePublicUrl} onChange={e => setApplausePublicUrl(e.target.value)}
+            <input value={crowdTestingPublicUrl} onChange={e => setCrowdTestingPublicUrl(e.target.value)}
               className={inputClass} disabled />
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function SettingsPage() {
           {connectionResult && <span className="text-sm">{connectionResult}</span>}
         </div>
         <p className="text-gray-500 text-xs mt-4">
-          ⚠️ Credentials are configured via environment variables on the server (APPLAUSE_API_KEY, APPLAUSE_PRODUCT_ID, APPLAUSE_AUTO_API_URL, APPLAUSE_PUBLIC_API_URL).
+          ⚠️ Credentials are configured via environment variables on the server (TESTING_API_KEY, TESTING_PRODUCT_ID, TESTING_AUTO_API_URL, TESTING_PUBLIC_API_URL).
         </p>
       </div>
     </div>

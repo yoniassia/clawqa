@@ -48,7 +48,7 @@ async function executeAction(action: string, targetUrl: string, bug: any) {
       data: { releaseBlocker: true },
     });
   } else if (action === "escalate") {
-    // Trigger Applause escalation via internal API
+    // Trigger CrowdTesting escalation via internal API
     if (targetUrl) {
       fetch(targetUrl, {
         method: "POST",

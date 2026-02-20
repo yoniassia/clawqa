@@ -32,7 +32,7 @@ export default function TestCycleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState("");
-  const [applauseStatus, setApplauseStatus] = useState<{ configured: boolean; reachable: boolean } | null>(null);
+  const [crowdTestingStatus, setCrowdTestingStatus] = useState<{ configured: boolean; reachable: boolean } | null>(null);
 
   useEffect(() => {
     fetch(`/api/v1/test-cycles/${id}`)
@@ -41,7 +41,7 @@ export default function TestCycleDetailPage() {
       .catch(() => setLoading(false));
     fetch("/api/v1/applause/status")
       .then(r => r.json())
-      .then(setApplauseStatus)
+      .then(setCrowdTestingStatus)
       .catch(() => {});
   }, [id]);
 
@@ -90,18 +90,18 @@ export default function TestCycleDetailPage() {
         </div>
       </div>
 
-      {/* Applause Status Indicator */}
+      {/* CrowdTesting Status Indicator */}
       <div className="bg-gray-800/40 backdrop-blur-lg border border-gray-700/50 rounded-2xl p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full ${
             isEscalated ? "bg-purple-400 animate-pulse" :
-            applauseStatus?.configured && applauseStatus?.reachable ? "bg-green-400" :
-            applauseStatus?.configured ? "bg-yellow-400" : "bg-gray-500"
+            crowdTestingStatus?.configured && crowdTestingStatus?.reachable ? "bg-green-400" :
+            crowdTestingStatus?.configured ? "bg-yellow-400" : "bg-gray-500"
           }`} />
           <span className="text-sm text-gray-300">
-            {isEscalated ? "Escalated to Applause" :
-             applauseStatus?.configured && applauseStatus?.reachable ? "Applause Connected" :
-             applauseStatus?.configured ? "Applause Configured (unreachable)" : "Applause Not Configured"}
+            {isEscalated ? "Escalated to CrowdTesting" :
+             crowdTestingStatus?.configured && crowdTestingStatus?.reachable ? "CrowdTesting Connected" :
+             crowdTestingStatus?.configured ? "CrowdTesting Configured (unreachable)" : "CrowdTesting Not Configured"}
           </span>
         </div>
         {isEscalated && (
@@ -184,7 +184,7 @@ export default function TestCycleDetailPage() {
       {cycle.status !== "escalated_to_applause" && (
         <button onClick={escalate}
           className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-700 text-white font-medium rounded-lg hover:from-purple-400 hover:to-purple-600 transition-all">
-          Escalate to Applause
+          Escalate to Testers
         </button>
       )}
     </div>

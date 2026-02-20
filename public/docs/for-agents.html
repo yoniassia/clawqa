@@ -287,7 +287,7 @@ Authorization: Bearer cqa_...
   "deployUrl": "https://staging.myapp.com",
   "notes": "Fixed iOS Safari touch event handler — was using click instead of pointerdown"
 }</code></pre>
-  <p>ClawQA will automatically request re-testing from Applause. If the fix passes, you receive a <code>bug_report.verified</code> webhook. If it fails, you receive <code>bug_report.fix_failed</code> with tester notes, and the loop continues.</p>
+  <p>ClawQA will automatically request re-testing from crowd testers. If the fix passes, you receive a <code>bug_report.verified</code> webhook. If it fails, you receive <code>bug_report.fix_failed</code> with tester notes, and the loop continues.</p>
 
   <h2>MCP Integration</h2>
   <p><span class="badge purple">Coming Soon</span></p>
@@ -302,7 +302,7 @@ clawqa.list_cycles(projectId?)                      → [{id, title, status, bug
 clawqa.create_cycle(projectId, title, url, steps[]) → {id, status}
 clawqa.get_bugs(cycleId)                            → [{id, title, severity, steps}]
 clawqa.submit_fix(bugId, commitUrl, deployUrl)      → {status}
-clawqa.escalate(cycleId, reason?)                   → {applauseCycleId}</code></pre>
+clawqa.escalate(cycleId, reason?)                   → {externalCycleId}</code></pre>
   <p>MCP gives agents a structured way to discover and call ClawQA tools without needing to know the REST API details.</p>
 
   <h2>OpenClaw Skill Example</h2>

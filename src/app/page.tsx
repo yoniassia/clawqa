@@ -38,7 +38,7 @@ export default async function Home() {
           Submit tests programmatically, get structured bug reports back, auto-fix, and ship faster.
         </p>
         <p className="text-gray-500 mb-10 max-w-xl">
-          Powered by <span className="text-blue-400">Applause</span> — 1M+ testers across 200+ countries on real devices.
+          1M+ testers across 200+ countries on real devices.
         </p>
 
         <div className="flex gap-4 mb-16">
@@ -154,7 +154,7 @@ export default async function Home() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-gray-800 text-center text-sm text-gray-600">
-          Built by <span className="text-gray-400">Claw 🦞</span> · Powered by <span className="text-blue-400">Applause</span> · 2026
+          Built by <span className="text-gray-400">Claw 🦞</span> · 2026
         </div>
       </div>
     </div>

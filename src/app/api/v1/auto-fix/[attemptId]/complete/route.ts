@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { getApplauseClient } from "@/lib/applause";
+import { getCrowdTestingClient } from "@/lib/applause";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ attemptId: string }> }) {
   const { user, response } = await requireAuth(req);
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ att
     data: { status: "retesting" },
   });
 
-  // Trigger re-test via Applause if configured
-  const client = getApplauseClient();
+  // Trigger re-test via CrowdTesting if configured
+  const client = getCrowdTestingClient();
   if (client.isConfigured) {
     try {
       const { runId } = await client.startTestRun([`retest-bug-${job.bugId}`]);
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ att
         data: { status: "retesting", webhookPayload: JSON.stringify({ ...JSON.parse(job.webhookPayload), retestRunId: runId }) },
       });
     } catch {
-      // Applause not available, mark as verified anyway
+      // CrowdTesting not available, mark as verified anyway
       await prisma.autoFixJob.update({
         where: { id: job.id },
         data: { status: "verified", completedAt: new Date() },

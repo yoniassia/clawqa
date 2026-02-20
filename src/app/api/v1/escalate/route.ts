@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApplauseClient } from '@/lib/applause';
+import { getCrowdTestingClient } from '@/lib/applause';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
@@ -8,10 +8,10 @@ export async function POST(req: NextRequest) {
     const { cycleId, reason } = body;
     if (!cycleId) return NextResponse.json({ error: 'cycleId required' }, { status: 400 });
 
-    const applause = getApplauseClient();
+    const applause = getCrowdTestingClient();
     if (!applause.isConfigured) {
       return NextResponse.json({
-        error: 'Applause not configured',
+        error: 'CrowdTesting not configured',
         message: 'Add APPLAUSE_API_KEY and APPLAUSE_PRODUCT_ID in settings to enable crowd testing escalation.',
         fallback: 'Manual testing mode — share test cycle URL with human testers directly.'
       }, { status: 503 });
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       return typeof name === 'string' ? name : `Step ${i + 1}`;
     });
 
-    // Create test run in Applause
+    // Create test run in CrowdTesting
     const { runId } = await applause.startTestRun(testNames);
 
     // Start each test case as IN_PROGRESS
@@ -36,13 +36,13 @@ export async function POST(req: NextRequest) {
       testResultIds.push(testResultId);
     }
 
-    // Update cycle with Applause run info
+    // Update cycle with CrowdTesting run info
     await prisma.testCycle.update({
       where: { id: cycleId },
       data: {
         status: 'escalated_to_applause',
         description: (cycle.description || '') +
-          `\n\n[Escalated to Applause: ${new Date().toISOString()}] runId=${runId} testResultIds=${JSON.stringify(testResultIds)} Reason: ${reason || 'Human verification needed'}`
+          `\n\n[Escalated to CrowdTesting: ${new Date().toISOString()}] runId=${runId} testResultIds=${JSON.stringify(testResultIds)} Reason: ${reason || 'Human verification needed'}`
       }
     });
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       success: true,
       runId,
       testResultIds,
-      message: 'Test run created in Applause with all test cases IN_PROGRESS',
+      message: 'Test run created in CrowdTesting with all test cases IN_PROGRESS',
       estimatedTurnaround: '2-4 hours',
     });
   } catch (error: any) {

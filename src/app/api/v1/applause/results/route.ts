@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const cycle = await prisma.testCycle.findUnique({ where: { id: cycleId } });
   if (!cycle) return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
 
-  // In a real integration we'd poll Applause API for results.
+  // In a real integration we'd poll Testing API for results.
   // For now, this creates bug reports from any test executions marked as failed.
   const executions = await prisma.testExecution.findMany({
     where: { cycleId, status: "failed" },
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const created: string[] = [];
   for (const exec of executions) {
     const existing = await prisma.bugReport.findFirst({
-      where: { cycleId, title: { startsWith: `[Applause Sync]` }, reporterId: exec.testerId },
+      where: { cycleId, title: { startsWith: `[CrowdTesting Sync]` }, reporterId: exec.testerId },
     });
     if (existing) continue;
 
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       data: {
         cycleId,
         reporterId: exec.testerId,
-        title: `[Applause Sync] Failed execution ${exec.id.slice(0, 8)}`,
+        title: `[CrowdTesting Sync] Failed execution ${exec.id.slice(0, 8)}`,
         severity: "major",
         status: "new",
         stepsToReproduce: failedSteps.map((s: any) => s.note || s.comment || "Failed step").join("\n"),

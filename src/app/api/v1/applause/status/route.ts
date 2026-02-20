@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getApplauseClient } from "@/lib/applause";
+import { getCrowdTestingClient } from "@/lib/applause";
 
 export async function GET() {
-  const client = getApplauseClient();
+  const client = getCrowdTestingClient();
   if (!client.isConfigured) {
     return NextResponse.json({ configured: false, reachable: false });
   }

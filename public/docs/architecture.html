@@ -137,7 +137,7 @@
     <div class="flow-arrow">→</div>
     <div class="flow-step"><div class="icon">💾</div><div class="name">SQLite</div><div class="desc">Prisma ORM</div></div>
     <div class="flow-arrow">↔</div>
-    <div class="flow-step"><div class="icon">🧪</div><div class="name">Applause</div><div class="desc">Crowd Testing</div></div>
+    <div class="flow-step"><div class="icon">🧪</div><div class="name">Crowd Testing</div><div class="desc">Crowd Testing</div></div>
   </div>
   <ul>
     <li><strong>Server:</strong> Hetzner 135.181.43.68 · Ubuntu · PM2 process manager</li>
@@ -177,7 +177,7 @@
           </details>
           <span class="f">api-keys/page.tsx <span class="comment">— Generate/revoke API keys</span></span>
           <span class="f">projects/[slug]/page.tsx <span class="comment">— Project detail</span></span>
-          <span class="f">settings/page.tsx <span class="comment">— Applause config + connection test</span></span>
+          <span class="f">settings/page.tsx <span class="comment">— Crowd Testing config + connection test</span></span>
         </details>
         <details open>
           <summary>api/ <span class="comment">— 38 API routes</span></summary>
@@ -206,14 +206,14 @@
             <span class="f">webhooks/route.ts <span class="comment">— Register/list webhooks</span></span>
             <span class="f">webhooks/test/route.ts <span class="comment">— Send test ping</span></span>
             <span class="f">webhooks/[id]/deliveries/route.ts <span class="comment">— Delivery history</span></span>
-            <span class="f">escalate/route.ts <span class="comment">— Send to Applause</span></span>
+            <span class="f">escalate/route.ts <span class="comment">— Send to Testers</span></span>
             <span class="f">escalation-rules/route.ts <span class="comment">— Priority routing rules</span></span>
             <span class="f">github/connect/route.ts <span class="comment">— Link repo to project</span></span>
             <span class="f">github/webhook/route.ts <span class="comment">— Receive PR events</span></span>
             <span class="f">github/prs/[prNumber]/status/route.ts <span class="comment">— Test status for PR</span></span>
-            <span class="f">applause/status/route.ts <span class="comment">— Connection check</span></span>
-            <span class="f">applause/results/route.ts <span class="comment">— Sync test results</span></span>
-            <span class="f">applause/webhook/route.ts <span class="comment">— Receive Applause events</span></span>
+            <span class="f">crowd-testing/status/route.ts <span class="comment">— Connection check</span></span>
+            <span class="f">crowd-testing/results/route.ts <span class="comment">— Sync test results</span></span>
+            <span class="f">crowd-testing/webhook/route.ts <span class="comment">— Receive Crowd Testing events</span></span>
           </details>
         </details>
         <span class="f">developers/page.tsx <span class="comment">— Public API docs portal</span></span>
@@ -225,7 +225,7 @@
         <span class="f">auth.ts <span class="comment">— NextAuth config (GitHub + Credentials)</span></span>
         <span class="f">prisma.ts <span class="comment">— Prisma client singleton</span></span>
         <span class="f">api-auth.ts <span class="comment">— API key validation (SHA-256 hash)</span></span>
-        <span class="f">applause.ts <span class="comment">— Applause SDK (startTestRun, submitResult...)</span></span>
+        <span class="f">crowd-testing.ts <span class="comment">— Testing SDK (startTestRun, submitResult...)</span></span>
         <span class="f">webhook-dispatcher.ts <span class="comment">— HMAC-SHA256 signed delivery + retries</span></span>
         <span class="f">rate-limit.ts <span class="comment">— Sliding window (100 req/min per key)</span></span>
         <span class="f">priority-scoring.ts <span class="comment">— Bug priority calculation</span></span>
@@ -246,10 +246,10 @@
         <span class="f">api-bugs.test.ts <span class="comment">— 2 tests: bug CRUD</span></span>
         <span class="f">api-projects.test.ts <span class="comment">— 3 tests: project data</span></span>
         <span class="f">api-test-cycles.test.ts <span class="comment">— 5 tests: cycle data, steps JSON</span></span>
-        <span class="f">applause-client.test.ts <span class="comment">— 10 tests: SDK methods, config</span></span>
+        <span class="f">crowd-testing-client.test.ts <span class="comment">— 10 tests: SDK methods, config</span></span>
         <span class="f">escalation-rules.test.ts <span class="comment">— 2 tests: rule matching</span></span>
         <span class="f">mcp-tools.test.ts <span class="comment">— 3 tests: tool definitions</span></span>
-        <span class="f">phases456.test.ts <span class="comment">— 9 tests: auto-fix, webhooks, applause</span></span>
+        <span class="f">phases456.test.ts <span class="comment">— 9 tests: auto-fix, webhooks, crowd-testing</span></span>
         <span class="f">phases-7-10.test.ts <span class="comment">— 8 tests: plans, analytics, agents, github</span></span>
         <span class="f">priority-scoring.test.ts <span class="comment">— 6 tests: score calculation</span></span>
         <span class="f">rate-limit.test.ts <span class="comment">— 3 tests: sliding window</span></span>
@@ -346,18 +346,18 @@
     <tr><td><span class="method get">GET</span></td><td><code>/api/v1/analytics</code></td><td><span class="auth-badge none">None</span></td><td>Bug stats & trends</td></tr>
   </table>
 
-  <h3>Escalation, GitHub & Applause</h3>
+  <h3>Escalation, GitHub & Crowd Testing</h3>
   <table>
     <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
-    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/escalate</code></td><td><span class="auth-badge key">API Key</span></td><td>Escalate cycle to Applause</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/escalate</code></td><td><span class="auth-badge key">API Key</span></td><td>Escalate cycle to crowd testers</td></tr>
     <tr><td><span class="method get">GET</span></td><td><code>/api/v1/escalation-rules</code></td><td><span class="auth-badge key">API Key</span></td><td>List escalation rules</td></tr>
     <tr><td><span class="method post">POST</span></td><td><code>/api/v1/escalation-rules</code></td><td><span class="auth-badge key">API Key</span></td><td>Create rule</td></tr>
     <tr><td><span class="method post">POST</span></td><td><code>/api/v1/github/connect</code></td><td><span class="auth-badge key">API Key</span></td><td>Link repo to project</td></tr>
     <tr><td><span class="method post">POST</span></td><td><code>/api/v1/github/webhook</code></td><td><span class="auth-badge none">GitHub</span></td><td>Receive PR events</td></tr>
     <tr><td><span class="method get">GET</span></td><td><code>/api/v1/github/prs/:num/status</code></td><td><span class="auth-badge none">None</span></td><td>Test status for PR</td></tr>
-    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/applause/status</code></td><td><span class="auth-badge none">None</span></td><td>Connection check</td></tr>
-    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/applause/results</code></td><td><span class="auth-badge key">API Key</span></td><td>Sync test results</td></tr>
-    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/applause/webhook</code></td><td><span class="auth-badge none">Applause</span></td><td>Receive results</td></tr>
+    <tr><td><span class="method get">GET</span></td><td><code>/api/v1/crowd-testing/status</code></td><td><span class="auth-badge none">None</span></td><td>Connection check</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/crowd-testing/results</code></td><td><span class="auth-badge key">API Key</span></td><td>Sync test results</td></tr>
+    <tr><td><span class="method post">POST</span></td><td><code>/api/v1/crowd-testing/webhook</code></td><td><span class="auth-badge none">Crowd Testing</span></td><td>Receive results</td></tr>
   </table>
 
   <h3>MCP & Internal</h3>
@@ -378,7 +378,7 @@
     <div class="flow-arrow">→</div>
     <div class="flow-step"><div class="icon">🚀</div><div class="name">Escalate</div><div class="desc">POST /escalate</div></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step"><div class="icon">🧪</div><div class="name">Applause</div><div class="desc">Humans test</div></div>
+    <div class="flow-step"><div class="icon">🧪</div><div class="name">Crowd Testing</div><div class="desc">Humans test</div></div>
     <div class="flow-arrow">→</div>
     <div class="flow-step"><div class="icon">🐛</div><div class="name">Bugs</div><div class="desc">Webhook callback</div></div>
     <div class="flow-arrow">→</div>
@@ -399,7 +399,7 @@
     <div class="flow-arrow">→</div>
     <div class="flow-step"><div class="icon">📤</div><div class="name">Submit Fix</div><div class="desc">POST /bugs/:id/fix</div></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step"><div class="icon">🧪</div><div class="name">Re-test</div><div class="desc">Applause verifies</div></div>
+    <div class="flow-step"><div class="icon">🧪</div><div class="name">Re-test</div><div class="desc">Crowd Testing verifies</div></div>
     <div class="flow-arrow">→</div>
     <div class="flow-step"><div class="icon">✅❌</div><div class="name">Result</div><div class="desc">Verified or retry</div></div>
   </div>
@@ -429,10 +429,10 @@
     <div class="test-card"><h4>api-bugs.test.ts</h4><p><span class="count">2 tests</span> — Bug report CRUD operations</p></div>
     <div class="test-card"><h4>api-projects.test.ts</h4><p><span class="count">3 tests</span> — Project listing, slug lookup, data integrity</p></div>
     <div class="test-card"><h4>api-test-cycles.test.ts</h4><p><span class="count">5 tests</span> — Cycle count, steps JSON parsing, priority validation</p></div>
-    <div class="test-card"><h4>applause-client.test.ts</h4><p><span class="count">10 tests</span> — SDK methods, configured/unconfigured states, status values</p></div>
+    <div class="test-card"><h4>crowd-testing-client.test.ts</h4><p><span class="count">10 tests</span> — SDK methods, configured/unconfigured states, status values</p></div>
     <div class="test-card"><h4>escalation-rules.test.ts</h4><p><span class="count">2 tests</span> — Rule condition matching, action execution</p></div>
     <div class="test-card"><h4>mcp-tools.test.ts</h4><p><span class="count">3 tests</span> — Tool definitions, schemas, protocol compliance</p></div>
-    <div class="test-card"><h4>phases456.test.ts</h4><p><span class="count">9 tests</span> — Auto-fix jobs, webhook delivery, Applause integration</p></div>
+    <div class="test-card"><h4>phases456.test.ts</h4><p><span class="count">9 tests</span> — Auto-fix jobs, webhook delivery, testing integration</p></div>
     <div class="test-card"><h4>phases-7-10.test.ts</h4><p><span class="count">8 tests</span> — Test plans, analytics, agent assignments, GitHub</p></div>
     <div class="test-card"><h4>priority-scoring.test.ts</h4><p><span class="count">6 tests</span> — Score calculation, severity weighting</p></div>
     <div class="test-card"><h4>rate-limit.test.ts</h4><p><span class="count">3 tests</span> — Sliding window, 429 responses, key isolation</p></div>
@@ -441,7 +441,7 @@
   </div>
 
   <h2>AI vs Human Testing Matrix</h2>
-  <p>What ClawQA's AI can verify automatically vs what must be escalated to Applause's human testers.</p>
+  <p>What ClawQA's AI can verify automatically vs what must be escalated to crowd testers's human testers.</p>
   <div class="matrix">
     <div class="matrix-col ai">
       <h3>🤖 AI Can Test (Automated)</h3>
@@ -461,7 +461,7 @@
       </ul>
     </div>
     <div class="matrix-col human">
-      <h3>👤 Humans Must Test (Applause)</h3>
+      <h3>👤 Humans Must Test (Crowd Testing)</h3>
       <ul>
         <li>Real GitHub OAuth on phones (iOS Safari, Android Chrome)</li>
         <li>Cross-browser visual rendering (glassmorphism, backdrop-blur)</li>

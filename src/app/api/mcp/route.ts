@@ -62,7 +62,7 @@ const MCP_TOOLS = [
   },
   {
     name: "clawqa.escalate",
-    description: "Escalate a test cycle to Applause crowd testing",
+    description: "Escalate a test cycle to CrowdTesting crowd testing",
     inputSchema: {
       type: "object",
       properties: {
