@@ -149,6 +149,12 @@ model BugReport {
   screenshotUrls   String       @default("[]")
   priorityScore    Int          @default(0)
   releaseBlocker   Boolean      @default(false)
+  flow             String?
+  errorCode        String?
+  occurrences      Int          @default(1)
+  affectedCids     String?
+  projectSlug      String?
+  isAutoReport     Boolean      @default(false)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   cycle            TestCycle    @relation(fields: [cycleId], references: [id])
